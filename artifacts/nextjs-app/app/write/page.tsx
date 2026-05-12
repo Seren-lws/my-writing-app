@@ -17,6 +17,8 @@ type Chapter = {
   bookId: string;
   title: string;
   content: string;
+  outline: string;
+  aiInstruction: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -92,12 +94,20 @@ function bootstrap(urlBookId: string): {
 
   const defaultBookId = books[0].id;
 
-  // Migrate chapters without bookId to default book
+  // Migrate chapters: add bookId + outline + aiInstruction if missing
   let migrated = false;
   chapters = chapters.map((c) => {
-    if (!c.bookId) {
+    const needsBookId = !c.bookId;
+    const needsOutline = c.outline === undefined;
+    const needsAiInstruction = c.aiInstruction === undefined;
+    if (needsBookId || needsOutline || needsAiInstruction) {
       migrated = true;
-      return { ...c, bookId: defaultBookId };
+      return {
+        ...c,
+        bookId: c.bookId || defaultBookId,
+        outline: c.outline ?? "",
+        aiInstruction: c.aiInstruction ?? "",
+      };
     }
     return c;
   });
@@ -182,7 +192,7 @@ export default function WritePage() {
   );
 
   function updateActiveChapter(
-    patch: Partial<Pick<Chapter, "title" | "content">>
+    patch: Partial<Pick<Chapter, "title" | "content" | "outline" | "aiInstruction">>
   ) {
     const updated = chapters.map((c) =>
       c.id === activeChapterId ? { ...c, ...patch, updatedAt: ts() } : c
@@ -231,6 +241,8 @@ export default function WritePage() {
       bookId: activeBookId,
       title: "新章节",
       content: "",
+      outline: "",
+      aiInstruction: "",
       createdAt: ts(),
       updatedAt: ts(),
     };
@@ -387,14 +399,14 @@ export default function WritePage() {
         </section>
 
         {/* Right sidebar */}
-        <aside className="space-y-5 border-l border-[#e0c9a5] bg-[#fff8eb]/70 p-5">
+        <aside className="flex flex-col gap-5 border-l border-[#e0c9a5] bg-[#fff8eb]/70 p-5 overflow-y-auto">
           <section>
             <p className="mb-4 text-sm font-medium text-[#9b744d]">速记灵感</p>
             <div className="rounded-2xl border border-[#d7bd83] bg-[#fff2b8] p-4 shadow-sm">
               <textarea
                 value={quickNote}
                 onChange={(e) => setQuickNote(e.target.value)}
-                className="min-h-32 w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#a8874f]"
+                className="min-h-24 w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#a8874f]"
                 placeholder="突然想到的台词、伏笔、梗、画面……先丢这里。"
               />
               <div className="mt-3 flex items-center justify-between">
@@ -421,13 +433,46 @@ export default function WritePage() {
           </section>
 
           <section>
-            <p className="mb-4 text-sm font-medium text-[#9b744d]">AI 搭子</p>
-            <div className="rounded-2xl border border-[#ead8b8] bg-white/70 p-4 text-sm leading-6 text-[#806044]">
-              这里以后会放 AI 写作助手。它会读取你的写作 DNA、书籍灵魂卡和当前章节上下文。
+            <p className="mb-4 text-sm font-medium text-[#9b744d]">AI 扩写准备</p>
+
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
+                <label className="mb-2 block text-xs font-medium text-[#9b744d]">
+                  本章大纲
+                </label>
+                <textarea
+                  rows={4}
+                  value={activeChapter?.outline ?? ""}
+                  onChange={(e) =>
+                    updateActiveChapter({ outline: e.target.value })
+                  }
+                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
+                  placeholder="这一章要写什么？几个关键节拍或场景……"
+                />
+              </div>
+
+              <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
+                <label className="mb-2 block text-xs font-medium text-[#9b744d]">
+                  本次指令
+                </label>
+                <textarea
+                  rows={3}
+                  value={activeChapter?.aiInstruction ?? ""}
+                  onChange={(e) =>
+                    updateActiveChapter({ aiInstruction: e.target.value })
+                  }
+                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
+                  placeholder="对 AI 的特别要求，比如：重点写眼神交流，不要推进剧情……"
+                />
+              </div>
             </div>
-            <button className="mt-4 w-full rounded-xl bg-[#6e4b2d] px-4 py-3 text-sm text-amber-50 opacity-60">
-              之后再接入 AI
-            </button>
+
+            <Link
+              href={`/prompt-preview?bookId=${activeBookId}&chapterId=${activeChapterId}`}
+              className="mt-4 block w-full rounded-xl bg-[#6e4b2d] px-4 py-3 text-center text-sm text-amber-50 transition hover:bg-[#58391f]"
+            >
+              生成 Prompt 预览
+            </Link>
           </section>
         </aside>
       </div>

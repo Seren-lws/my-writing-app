@@ -1,7 +1,7 @@
 {
   "/page": "app/page.js",
+  "/readers/page": "app/readers/page.js",
+  "/stats/page": "app/stats/page.js",
   "/write/page": "app/write/page.js",
-  "/style/page": "app/style/page.js",
-  "/book-soul/page": "app/book-soul/page.js",
-  "/inspirations/page": "app/inspirations/page.js"
+  "/prompt-preview/page": "app/prompt-preview/page.js"
 }
