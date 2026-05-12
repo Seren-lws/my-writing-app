@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HomeBookList from "./components/HomeBookList";
 
 export default function Home() {
   return (
@@ -166,6 +167,8 @@ export default function Home() {
               </div>
             </div>
           </section>
+
+          <HomeBookList />
 
           <p className="mt-6 text-center text-sm text-[#8a6a4d]">
             更好陪伴，更多趣味，更强动力。
