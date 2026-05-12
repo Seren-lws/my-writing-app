@@ -6,7 +6,7 @@
  * or disable the default devtool with "devtool: false".
  * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
  */
-(self["webpackChunk_N_E"] = self["webpackChunk_N_E"] || []).push([["app/style/page"],{
+self["webpackHotUpdate_N_E"]("app/style/page",{
 
 /***/ "(app-pages-browser)/../../node_modules/.pnpm/next@15.3.3_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/build/webpack/loaders/next-flight-client-entry-loader.js?modules=%7B%22request%22%3A%22%2Fhome%2Frunner%2Fworkspace%2Fartifacts%2Fnextjs-app%2Fapp%2Fstyle%2Fpage.tsx%22%2C%22ids%22%3A%5B%5D%7D&server=false!":
 /*!******************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -128,11 +128,4 @@ eval(__webpack_require__.ts("__webpack_require__.r(__webpack_exports__);\n/* har
 
 /***/ })
 
-},
-/******/ __webpack_require__ => { // webpackRuntimeModules
-/******/ var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-/******/ __webpack_require__.O(0, ["main-app"], () => (__webpack_exec__("(app-pages-browser)/../../node_modules/.pnpm/next@15.3.3_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/build/webpack/loaders/next-flight-client-entry-loader.js?modules=%7B%22request%22%3A%22%2Fhome%2Frunner%2Fworkspace%2Fartifacts%2Fnextjs-app%2Fapp%2Fstyle%2Fpage.tsx%22%2C%22ids%22%3A%5B%5D%7D&server=false!")));
-/******/ var __webpack_exports__ = __webpack_require__.O();
-/******/ _N_E = __webpack_exports__;
-/******/ }
-]);
+});
