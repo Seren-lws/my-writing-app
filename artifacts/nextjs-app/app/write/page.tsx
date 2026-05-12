@@ -3,6 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
+type Chapter = {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 type SaveStatus = "idle" | "writing" | "saving" | "saved";
 
 type Inspiration = {
@@ -11,79 +19,126 @@ type Inspiration = {
   createdAt: string;
 };
 
-function formatTime(date: Date) {
-  return date.toLocaleTimeString("zh-CN", {
+function now() {
+  return new Date().toISOString();
+}
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("zh-CN", {
     hour: "2-digit",
     minute: "2-digit",
   });
 }
 
+function loadChapters(): Chapter[] {
+  try {
+    const raw = localStorage.getItem("chapters");
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+}
+
+function saveChapters(chapters: Chapter[]) {
+  localStorage.setItem("chapters", JSON.stringify(chapters));
+}
+
+function makeDefaultChapter(): Chapter {
+  const t = now();
+  return {
+    id: crypto.randomUUID(),
+    title: "第一章",
+    content: "",
+    createdAt: t,
+    updatedAt: t,
+  };
+}
+
 export default function WritePage() {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [activeId, setActiveId] = useState<string>("");
   const [quickNote, setQuickNote] = useState("");
   const [noteSavedMessage, setNoteSavedMessage] = useState("");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [savedTime, setSavedTime] = useState("");
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const writingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const savedTitle = localStorage.getItem("draft-title");
-    const savedContent = localStorage.getItem("draft-content");
-    if (savedTitle) setTitle(savedTitle);
-    if (savedContent) setContent(savedContent);
+    let loaded = loadChapters();
+    if (loaded.length === 0) {
+      const def = makeDefaultChapter();
+      loaded = [def];
+      saveChapters(loaded);
+    }
+    setChapters(loaded);
+    setActiveId(loaded[0].id);
   }, []);
 
-  const performSave = useCallback(
-    (currentTitle: string, currentContent: string) => {
-      if (!currentContent.trim() && !currentTitle.trim()) return;
-      setSaveStatus("saving");
-      setTimeout(() => {
-        localStorage.setItem("draft-title", currentTitle);
-        localStorage.setItem("draft-content", currentContent);
-        const now = new Date();
-        setSavedTime(formatTime(now));
-        setSaveStatus("saved");
-      }, 400);
-    },
-    []
-  );
+  const active = chapters.find((c) => c.id === activeId) ?? null;
+
+  const performSave = useCallback((updatedChapters: Chapter[]) => {
+    setSaveStatus("saving");
+    setTimeout(() => {
+      saveChapters(updatedChapters);
+      setSavedTime(formatTime(now()));
+      setSaveStatus("saved");
+    }, 400);
+  }, []);
 
   const scheduleAutoSave = useCallback(
-    (nextTitle: string, nextContent: string) => {
+    (updatedChapters: Chapter[]) => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
       autoSaveTimer.current = setTimeout(() => {
-        performSave(nextTitle, nextContent);
+        performSave(updatedChapters);
       }, 5000);
     },
     [performSave]
   );
 
+  function updateActive(patch: Partial<Pick<Chapter, "title" | "content">>) {
+    const updated = chapters.map((c) =>
+      c.id === activeId ? { ...c, ...patch, updatedAt: now() } : c
+    );
+    setChapters(updated);
+    setSaveStatus("writing");
+    scheduleAutoSave(updated);
+    return updated;
+  }
+
   function handleTitleChange(value: string) {
-    setTitle(value);
-    triggerWritingStatus();
-    scheduleAutoSave(value, content);
+    updateActive({ title: value });
   }
 
   function handleContentChange(value: string) {
-    setContent(value);
-    triggerWritingStatus();
-    scheduleAutoSave(title, value);
-  }
-
-  function triggerWritingStatus() {
-    setSaveStatus("writing");
-    if (writingTimer.current) clearTimeout(writingTimer.current);
-    writingTimer.current = setTimeout(() => {
-      setSaveStatus((prev) => (prev === "writing" ? "writing" : prev));
-    }, 300);
+    updateActive({ content: value });
   }
 
   function handleSave() {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    performSave(title, content);
+    performSave(chapters);
+  }
+
+  function handleAddChapter() {
+    const t = now();
+    const newChapter: Chapter = {
+      id: crypto.randomUUID(),
+      title: "新章节",
+      content: "",
+      createdAt: t,
+      updatedAt: t,
+    };
+    const updated = [...chapters, newChapter];
+    setChapters(updated);
+    setActiveId(newChapter.id);
+    saveChapters(updated);
+  }
+
+  function handleSwitchChapter(id: string) {
+    if (id === activeId) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    saveChapters(chapters);
+    setActiveId(id);
+    setSaveStatus("idle");
   }
 
   useEffect(() => {
@@ -100,36 +155,32 @@ export default function WritePage() {
   useEffect(() => {
     return () => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-      if (writingTimer.current) clearTimeout(writingTimer.current);
     };
   }, []);
 
   function saveQuickNote() {
     if (!quickNote.trim()) return;
     const saved = localStorage.getItem("inspirations");
-    const oldInspirations: Inspiration[] = saved ? JSON.parse(saved) : [];
-    const now = new Date();
-    const newInspiration: Inspiration = {
+    const old: Inspiration[] = saved ? JSON.parse(saved) : [];
+    const entry: Inspiration = {
       id: crypto.randomUUID(),
       content: quickNote.trim(),
-      createdAt: now.toLocaleString("zh-CN", {
+      createdAt: new Date().toLocaleString("zh-CN", {
         month: "2-digit",
         day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
       }),
     };
-    localStorage.setItem(
-      "inspirations",
-      JSON.stringify([newInspiration, ...oldInspirations])
-    );
+    localStorage.setItem("inspirations", JSON.stringify([entry, ...old]));
     setQuickNote("");
     setNoteSavedMessage("已贴到灵感墙");
     window.setTimeout(() => setNoteSavedMessage(""), 1800);
   }
 
+  const content = active?.content ?? "";
   const characterCount = content.length;
-  const chineseWordCount = content.replace(/\s/g, "").length;
+  const wordCount = content.replace(/\s/g, "").length;
   const paragraphCount = content.split("\n").filter(Boolean).length;
 
   function statusLabel() {
@@ -152,10 +203,10 @@ export default function WritePage() {
 
           <input
             type="text"
-            value={title}
+            value={active?.title ?? ""}
             onChange={(e) => handleTitleChange(e.target.value)}
-            placeholder="未命名章节"
-            className="w-80 bg-transparent text-xl font-semibold text-[#4f3524] outline-none placeholder:text-[#c7a984]"
+            placeholder="章节标题"
+            className="w-72 bg-transparent text-xl font-semibold text-[#4f3524] outline-none placeholder:text-[#c7a984]"
           />
         </div>
 
@@ -164,14 +215,13 @@ export default function WritePage() {
             <span
               className={`text-sm transition-opacity ${
                 saveStatus === "saving"
-                  ? "text-[#c4a05a] animate-pulse"
+                  ? "animate-pulse text-[#c4a05a]"
                   : "text-[#9b744d]"
               }`}
             >
               {statusLabel()}
             </span>
           )}
-
           <button
             onClick={handleSave}
             className="rounded-full bg-[#6e4b2d] px-5 py-2 text-sm text-amber-50 transition hover:bg-[#58391f]"
@@ -182,16 +232,36 @@ export default function WritePage() {
       </header>
 
       <div className="grid flex-1 grid-cols-[220px_1fr_280px] overflow-hidden">
-        <aside className="border-r border-[#e0c9a5] bg-[#fff8eb]/70 p-5">
+        <aside className="flex flex-col border-r border-[#e0c9a5] bg-[#fff8eb]/70 p-5">
           <p className="mb-4 text-sm font-medium text-[#9b744d]">章节</p>
-          <div className="space-y-2">
-            <button className="w-full rounded-xl bg-white px-4 py-3 text-left text-sm text-[#4f3524] shadow-sm">
-              当前草稿
-            </button>
-            <button className="w-full rounded-xl px-4 py-3 text-left text-sm text-[#9b744d] transition hover:bg-white/70">
-              + 新章节
-            </button>
+
+          <div className="flex-1 overflow-y-auto space-y-1.5">
+            {chapters.map((ch) => (
+              <button
+                key={ch.id}
+                onClick={() => handleSwitchChapter(ch.id)}
+                className={`w-full rounded-xl px-4 py-3 text-left text-sm transition ${
+                  ch.id === activeId
+                    ? "bg-white text-[#4f3524] shadow-sm"
+                    : "text-[#9b744d] hover:bg-white/70"
+                }`}
+              >
+                <span className="block truncate">
+                  {ch.title || "未命名章节"}
+                </span>
+                <span className="mt-0.5 block text-xs text-[#c7a984]">
+                  {ch.content.replace(/\s/g, "").length} 字
+                </span>
+              </button>
+            ))}
           </div>
+
+          <button
+            onClick={handleAddChapter}
+            className="mt-4 w-full rounded-xl border border-dashed border-[#d8b98f] px-4 py-2.5 text-sm text-[#9b744d] transition hover:bg-white/70"
+          >
+            + 新章节
+          </button>
         </aside>
 
         <section className="overflow-auto px-12 py-10">
@@ -251,9 +321,10 @@ export default function WritePage() {
       </div>
 
       <footer className="flex items-center gap-6 border-t border-[#e0c9a5] bg-[#fff8eb]/90 px-8 py-3 text-xs text-[#9b744d]">
-        <span>{chineseWordCount} 字</span>
+        <span>{wordCount} 字</span>
         <span>{characterCount} 字符</span>
         <span>{paragraphCount} 段</span>
+        <span className="ml-auto text-[#c7a984]">共 {chapters.length} 章</span>
       </footer>
     </main>
   );
