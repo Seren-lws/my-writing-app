@@ -37,7 +37,7 @@ export default function Home() {
                     <div>
                       <p className="text-sm text-[#a37a50]">最近编辑</p>
                       <h2 className="mt-3 text-4xl font-semibold text-[#4f3524]">
-                        继续写《靡音》
+                        继续创作
                       </h2>
                     </div>
                     <span className="text-4xl">📖</span>

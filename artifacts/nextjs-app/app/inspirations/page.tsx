@@ -1,59 +1,133 @@
-const notes = [
-  {
-    id: 1,
-    title: "The rain scene",
-    body: "She stood at the window watching the rain trace paths down the glass — each drop choosing a different route, none of them wrong.",
-    tag: "scene",
-  },
-  {
-    id: 2,
-    title: "Character idea: the cartographer",
-    body: "A woman who draws maps of places she's never been. Her most famous map is of a city that doesn't exist — until someone finds it.",
-    tag: "character",
-  },
-  {
-    id: 3,
-    title: "Opening line",
-    body: "The last honest man in the city worked in the lost-and-found department.",
-    tag: "line",
-  },
-];
+"use client";
 
-const tagColors: Record<string, string> = {
-  scene: "bg-blue-100 text-blue-600",
-  character: "bg-purple-100 text-purple-600",
-  line: "bg-green-100 text-green-600",
+import { useEffect, useState } from "react";
+import Link from "next/link";
+
+type Inspiration = {
+  id: string;
+  content: string;
+  createdAt: string;
 };
 
 export default function InspirationsPage() {
-  return (
-    <div className="max-w-2xl mx-auto px-8 py-12">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-semibold text-stone-800">Inspirations</h2>
-          <p className="text-sm text-stone-400 mt-0.5">Collected ideas and sparks</p>
-        </div>
-        <button className="px-4 py-2 text-sm bg-amber-400 hover:bg-amber-500 text-white rounded-lg transition-colors">
-          + New note
-        </button>
-      </div>
+  const [content, setContent] = useState("");
+  const [inspirations, setInspirations] = useState<Inspiration[]>([]);
 
-      <div className="flex flex-col gap-4">
-        {notes.map((note) => (
-          <div
-            key={note.id}
-            className="p-5 bg-white rounded-2xl border border-stone-200 hover:border-amber-300 transition-colors cursor-pointer"
-          >
-            <div className="flex items-start justify-between gap-4 mb-2">
-              <h3 className="font-medium text-stone-800">{note.title}</h3>
-              <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${tagColors[note.tag]}`}>
-                {note.tag}
-              </span>
-            </div>
-            <p className="text-sm text-stone-500 leading-relaxed">{note.body}</p>
+  useEffect(() => {
+    const saved = localStorage.getItem("inspirations");
+
+    if (saved) {
+      setInspirations(JSON.parse(saved));
+    }
+  }, []);
+
+  function saveInspirations(nextInspirations: Inspiration[]) {
+    setInspirations(nextInspirations);
+    localStorage.setItem("inspirations", JSON.stringify(nextInspirations));
+  }
+
+  function addInspiration() {
+    if (!content.trim()) return;
+
+    const now = new Date();
+
+    const newInspiration: Inspiration = {
+      id: crypto.randomUUID(),
+      content: content.trim(),
+      createdAt: now.toLocaleString("zh-CN", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    saveInspirations([newInspiration, ...inspirations]);
+    setContent("");
+  }
+
+  function deleteInspiration(id: string) {
+    const nextInspirations = inspirations.filter((item) => item.id !== id);
+    saveInspirations(nextInspirations);
+  }
+
+  return (
+    <main className="min-h-screen bg-[#f8f0df] px-8 py-10 text-[#4f3524]">
+      <div className="mx-auto max-w-5xl">
+        <header className="mb-8 flex items-center justify-between">
+          <div>
+            <p className="text-sm tracking-[0.25em] text-[#9b744d]">
+              INSPIRATION WALL
+            </p>
+            <h1 className="mt-3 text-4xl font-semibold">灵感收集</h1>
+            <p className="mt-3 text-[#8a6a4d]">
+              先记下来，不急着整理。灵感可以乱一点，故事会自己长出来。
+            </p>
           </div>
-        ))}
+
+          <Link
+            href="/"
+            className="rounded-full border border-[#d8b98f] bg-[#fff8eb]/70 px-5 py-2 text-sm text-[#6e4b2d] shadow-sm transition hover:bg-white"
+          >
+            ← 回到小屋
+          </Link>
+        </header>
+
+        <section className="mb-8 rounded-[1.5rem] border border-[#d6b98f] bg-[#fff8eb] p-6 shadow-sm">
+          <label className="mb-3 block text-sm font-medium text-[#9b744d]">
+            新灵感
+          </label>
+
+          <textarea
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+            className="min-h-32 w-full resize-none rounded-2xl border border-[#ead8b8] bg-[#fffaf0] p-4 leading-7 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
+            placeholder="比如一句台词、一个场景、一个梗、一个人物动作……"
+          />
+
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-sm text-[#9b744d]">
+              {content.trim().length} 字
+            </p>
+
+            <button
+              onClick={addInspiration}
+              className="rounded-full bg-[#6e4b2d] px-5 py-2 text-sm text-amber-50 transition hover:bg-[#58391f]"
+            >
+              贴到灵感墙
+            </button>
+          </div>
+        </section>
+
+        {inspirations.length === 0 ? (
+          <div className="rounded-[1.5rem] border border-dashed border-[#d6b98f] bg-[#fff8eb]/60 p-10 text-center text-[#9b744d]">
+            这里还没有便签。先写下第一条灵感吧。
+          </div>
+        ) : (
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {inspirations.map((item) => (
+              <article
+                key={item.id}
+                className="rounded-2xl border border-[#d7bd83] bg-[#fff2b8] p-5 shadow-sm"
+              >
+                <div className="mb-4 flex items-center justify-between text-xs text-[#9b744d]">
+                  <span>{item.createdAt}</span>
+                  <button
+                    onClick={() => deleteInspiration(item.id)}
+                    className="rounded-full px-3 py-1 transition hover:bg-[#f3df91]"
+                  >
+                    删除
+                  </button>
+                </div>
+
+                <p className="whitespace-pre-wrap leading-7 text-[#4f3524]">
+                  {item.content}
+                </p>
+              </article>
+            ))}
+          </section>
+        )}
       </div>
-    </div>
+    </main>
   );
 }
