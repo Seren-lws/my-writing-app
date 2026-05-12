@@ -30,6 +30,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/inspirations/page.js"
+    ],
+    "/book-soul/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/book-soul/page.js"
     ]
   }
 }

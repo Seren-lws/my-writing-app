@@ -364,6 +364,14 @@ export default function WritePage() {
           >
             + 新章节
           </button>
+
+          <Link
+            href={`/book-soul?bookId=${activeBookId}`}
+            className="mt-2 flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#9b744d] transition hover:bg-white/70"
+          >
+            <span>🪬</span>
+            <span>书籍灵魂卡</span>
+          </Link>
         </aside>
 
         {/* Main editor */}
