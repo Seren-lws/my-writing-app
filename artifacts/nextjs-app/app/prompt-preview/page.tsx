@@ -27,6 +27,15 @@ type Inspiration = {
   createdAt: string;
 };
 
+type AdultSettings = {
+  enabled: boolean;
+  rating: string;
+  writingStyle: string;
+  relationBoundary: string;
+  preferences: string;
+  taboos: string;
+};
+
 type WritingDNA = {
   languageStyle?: string;
   preferences?: string;
@@ -81,6 +90,7 @@ export default function PromptPreviewPage() {
   const [inspirations, setInspirations] = useState<Inspiration[]>([]);
   const [writingDNA, setWritingDNA] = useState<WritingDNA>({});
   const [bookSouls, setBookSouls] = useState<BookSoul[]>([]);
+  const [adultSettings, setAdultSettings] = useState<AdultSettings | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -93,6 +103,10 @@ export default function PromptPreviewPage() {
     setInspirations(safeParse<Inspiration[]>("inspirations", []));
     setWritingDNA(safeParse<WritingDNA>("writing-dna", {}));
     setBookSouls(safeParse<BookSoul[]>("book-souls", []));
+    const raw = localStorage.getItem("adult-content-settings");
+    if (raw) {
+      try { setAdultSettings(JSON.parse(raw)); } catch {}
+    }
 
     setReady(true);
   }, []);
@@ -164,6 +178,30 @@ ${chapter?.outline || "暂无"}
 ${chapter?.aiInstruction || "暂无"}
 
 
+【成人向创作设置】
+
+${
+  !adultSettings || !adultSettings.enabled
+    ? "成人创作模式未开启。"
+    : `成人创作模式：已开启
+
+作品分级：
+${adultSettings.rating || "暂无"}
+
+关系边界：
+${adultSettings.relationBoundary || "暂无"}
+
+描写风格：
+${adultSettings.writingStyle || "暂无"}
+
+偏好说明：
+${adultSettings.preferences || "暂无"}
+
+禁忌清单：
+${adultSettings.taboos || "暂无"}`
+}
+
+
 【第五层：最近灵感】
 
 ${
@@ -173,7 +211,7 @@ ${
         .join("\n\n")
     : "暂无灵感"
 }`;
-  }, [writingDNA, book, soul, chapter, recentInspirations]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [writingDNA, book, soul, chapter, recentInspirations, adultSettings]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function copyPrompt() {
     navigator.clipboard.writeText(promptText);
@@ -240,6 +278,20 @@ ${
             <SectionCard title="第四层：当次任务层">
               <p>本章大纲：{chapter?.outline || "暂无"}</p>
               <p>本次指令：{chapter?.aiInstruction || "暂无"}</p>
+            </SectionCard>
+
+            <SectionCard title="成人向创作设置">
+              {!adultSettings || !adultSettings.enabled ? (
+                <p className="text-[#9b744d]">成人创作模式未开启。</p>
+              ) : (
+                <>
+                  <p>作品分级：{adultSettings.rating || "暂无"}</p>
+                  <p>关系边界：{adultSettings.relationBoundary || "暂无"}</p>
+                  <p>描写风格：{adultSettings.writingStyle || "暂无"}</p>
+                  <p>偏好说明：{adultSettings.preferences || "暂无"}</p>
+                  <p>禁忌清单：{adultSettings.taboos || "暂无"}</p>
+                </>
+              )}
             </SectionCard>
 
             <SectionCard title="第五层：最近灵感">
