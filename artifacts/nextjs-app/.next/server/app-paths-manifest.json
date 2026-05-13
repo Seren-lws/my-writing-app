@@ -1,7 +1,6 @@
 {
+  "/prompt-preview/page": "app/prompt-preview/page.js",
   "/page": "app/page.js",
-  "/readers/page": "app/readers/page.js",
-  "/stats/page": "app/stats/page.js",
   "/write/page": "app/write/page.js",
-  "/prompt-preview/page": "app/prompt-preview/page.js"
+  "/adult-settings/page": "app/adult-settings/page.js"
 }
