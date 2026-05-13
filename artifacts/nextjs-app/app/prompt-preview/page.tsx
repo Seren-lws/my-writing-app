@@ -27,6 +27,13 @@ type Inspiration = {
   createdAt: string;
 };
 
+type ModelSettings = {
+  baseUrl: string;
+  apiKey: string;
+  defaultModel: string;
+  modelsText: string;
+};
+
 type AdultSettings = {
   enabled: boolean;
   rating: string;
@@ -91,6 +98,8 @@ export default function PromptPreviewPage() {
   const [writingDNA, setWritingDNA] = useState<WritingDNA>({});
   const [bookSouls, setBookSouls] = useState<BookSoul[]>([]);
   const [adultSettings, setAdultSettings] = useState<AdultSettings | null>(null);
+  const [modelSettings, setModelSettings] = useState<ModelSettings | null>(null);
+  const [selectedModel, setSelectedModel] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -103,9 +112,24 @@ export default function PromptPreviewPage() {
     setInspirations(safeParse<Inspiration[]>("inspirations", []));
     setWritingDNA(safeParse<WritingDNA>("writing-dna", {}));
     setBookSouls(safeParse<BookSoul[]>("book-souls", []));
-    const raw = localStorage.getItem("adult-content-settings");
-    if (raw) {
-      try { setAdultSettings(JSON.parse(raw)); } catch {}
+    const adultRaw = localStorage.getItem("adult-content-settings");
+    if (adultRaw) {
+      try { setAdultSettings(JSON.parse(adultRaw)); } catch {}
+    }
+
+    const modelRaw = localStorage.getItem("ai-model-settings");
+    if (modelRaw) {
+      try { setModelSettings(JSON.parse(modelRaw)); } catch {}
+    }
+
+    const urlModel = params.get("model") ?? "";
+    if (urlModel) {
+      setSelectedModel(urlModel);
+    } else {
+      try {
+        const ms = modelRaw ? JSON.parse(modelRaw) : null;
+        setSelectedModel(ms?.defaultModel ?? "");
+      } catch {}
     }
 
     setReady(true);
@@ -118,7 +142,13 @@ export default function PromptPreviewPage() {
   const recentInspirations = inspirations.slice(0, 5);
 
   const promptText = useMemo(() => {
-    return `【第一层：我的写作 DNA】
+    return `【模型设置】
+
+API URL：${modelSettings?.baseUrl || "未配置"}
+本次模型：${selectedModel || "未指定"}
+
+
+【第一层：我的写作 DNA】
 
 语言风格：
 ${writingDNA.languageStyle || "暂无"}
@@ -211,7 +241,7 @@ ${
         .join("\n\n")
     : "暂无灵感"
 }`;
-  }, [writingDNA, book, soul, chapter, recentInspirations, adultSettings]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [writingDNA, book, soul, chapter, recentInspirations, adultSettings, modelSettings, selectedModel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function copyPrompt() {
     navigator.clipboard.writeText(promptText);
@@ -254,6 +284,12 @@ ${
 
         <div className="grid grid-cols-[1fr_1.15fr] gap-6">
           <div className="space-y-5">
+            <SectionCard title="模型设置">
+              <p>API URL：{modelSettings?.baseUrl || "未配置"}</p>
+              <p>本次模型：{selectedModel || "未指定"}</p>
+              <p>API Key：{modelSettings?.apiKey ? "已配置" : "未配置"}</p>
+            </SectionCard>
+
             <SectionCard title="第一层：我的写作 DNA">
               <p>语言风格：{writingDNA.languageStyle || "暂无"}</p>
               <p>写作偏好：{writingDNA.preferences || "暂无"}</p>

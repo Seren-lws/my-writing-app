@@ -1,5 +1,7 @@
 {
-  "/write/page": "app/write/page.js",
+  "/prompt-preview/page": "app/prompt-preview/page.js",
+  "/model-settings/page": "app/model-settings/page.js",
+  "/adult-settings/page": "app/adult-settings/page.js",
   "/page": "app/page.js",
-  "/prompt-preview/page": "app/prompt-preview/page.js"
+  "/write/page": "app/write/page.js"
 }

@@ -149,6 +149,8 @@ export default function WritePage() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [savedTime, setSavedTime] = useState("");
   const [ready, setReady] = useState(false);
+  const [modelOptions, setModelOptions] = useState<string[]>([]);
+  const [selectedModel, setSelectedModel] = useState("");
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -162,6 +164,22 @@ export default function WritePage() {
     setActiveBookId(bid);
     const bookChapters = c.filter((ch) => ch.bookId === bid);
     setActiveChapterId(bookChapters[0]?.id ?? "");
+
+    // Load model settings
+    try {
+      const raw = localStorage.getItem("ai-model-settings");
+      if (raw) {
+        const ms = JSON.parse(raw) as { baseUrl?: string; apiKey?: string; defaultModel?: string; modelsText?: string };
+        const lines = (ms.modelsText ?? "")
+          .split("\n")
+          .map((l: string) => l.trim())
+          .filter(Boolean);
+        const opts = lines.length > 0 ? lines : ms.defaultModel ? [ms.defaultModel] : [];
+        setModelOptions(opts);
+        setSelectedModel(ms.defaultModel ?? opts[0] ?? "");
+      }
+    } catch {}
+
     setReady(true);
   }, []);
 
@@ -467,8 +485,25 @@ export default function WritePage() {
               </div>
             </div>
 
+            {modelOptions.length > 0 && (
+              <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
+                <label className="mb-2 block text-xs font-medium text-[#9b744d]">
+                  本次模型
+                </label>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="w-full rounded-xl border border-[#e0c9a5] bg-[#fff8eb] px-3 py-2 text-sm text-[#4f3524] outline-none"
+                >
+                  {modelOptions.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <Link
-              href={`/prompt-preview?bookId=${activeBookId}&chapterId=${activeChapterId}`}
+              href={`/prompt-preview?bookId=${activeBookId}&chapterId=${activeChapterId}${selectedModel ? `&model=${encodeURIComponent(selectedModel)}` : ""}`}
               className="mt-4 block w-full rounded-xl bg-[#6e4b2d] px-4 py-3 text-center text-sm text-amber-50 transition hover:bg-[#58391f]"
             >
               生成 Prompt 预览

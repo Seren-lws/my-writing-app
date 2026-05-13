@@ -157,7 +157,7 @@ export default function Home() {
 
                 <Link
                   href="/adult-settings"
-                  className="col-span-4 rounded-2xl border border-[#dbc29e] bg-[#fff8eb] p-6 shadow-md transition hover:-translate-y-1 hover:shadow-lg"
+                  className="col-span-2 rounded-2xl border border-[#dbc29e] bg-[#fff8eb] p-6 shadow-md transition hover:-translate-y-1 hover:shadow-lg"
                 >
                   <div className="text-3xl">🔞</div>
                   <h3 className="mt-4 text-xl font-semibold text-[#4f3524]">
@@ -165,6 +165,19 @@ export default function Home() {
                   </h3>
                   <p className="mt-2 text-sm text-[#8a6a4d]">
                     设置作品分级、描写偏好和边界
+                  </p>
+                </Link>
+
+                <Link
+                  href="/model-settings"
+                  className="col-span-2 rounded-2xl border border-[#dbc29e] bg-[#fff8eb] p-6 shadow-md transition hover:-translate-y-1 hover:shadow-lg"
+                >
+                  <div className="text-3xl">⚙️</div>
+                  <h3 className="mt-4 text-xl font-semibold text-[#4f3524]">
+                    模型设置
+                  </h3>
+                  <p className="mt-2 text-sm text-[#8a6a4d]">
+                    配置中转站 URL、API Key 和默认模型
                   </p>
                 </Link>
               </div>
