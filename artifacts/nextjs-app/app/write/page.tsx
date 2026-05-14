@@ -169,12 +169,18 @@ export default function WritePage() {
     try {
       const raw = localStorage.getItem("ai-model-settings");
       if (raw) {
-        const ms = JSON.parse(raw) as { baseUrl?: string; apiKey?: string; defaultModel?: string; modelsText?: string };
+        const ms = JSON.parse(raw) as {
+          baseUrl?: string;
+          apiKey?: string;
+          defaultModel?: string;
+          modelsText?: string;
+        };
         const lines = (ms.modelsText ?? "")
           .split("\n")
           .map((l: string) => l.trim())
           .filter(Boolean);
-        const opts = lines.length > 0 ? lines : ms.defaultModel ? [ms.defaultModel] : [];
+        const opts =
+          lines.length > 0 ? lines : ms.defaultModel ? [ms.defaultModel] : [];
         setModelOptions(opts);
         setSelectedModel(ms.defaultModel ?? opts[0] ?? "");
       }
@@ -203,17 +209,19 @@ export default function WritePage() {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
       autoSaveTimer.current = setTimeout(
         () => performSave(updatedChapters),
-        5000
+        5000,
       );
     },
-    [performSave]
+    [performSave],
   );
 
   function updateActiveChapter(
-    patch: Partial<Pick<Chapter, "title" | "content" | "outline" | "aiInstruction">>
+    patch: Partial<
+      Pick<Chapter, "title" | "content" | "outline" | "aiInstruction">
+    >,
   ) {
     const updated = chapters.map((c) =>
-      c.id === activeChapterId ? { ...c, ...patch, updatedAt: ts() } : c
+      c.id === activeChapterId ? { ...c, ...patch, updatedAt: ts() } : c,
     );
     setChapters(updated);
     setSaveStatus("writing");
@@ -324,13 +332,9 @@ export default function WritePage() {
 
           <div className="flex items-center gap-2">
             {activeBook && (
-              <span className="text-sm text-[#a37a50]">
-                {activeBook.title}
-              </span>
+              <span className="text-sm text-[#a37a50]">{activeBook.title}</span>
             )}
-            {activeBook && (
-              <span className="text-[#d8b98f]">/</span>
-            )}
+            {activeBook && <span className="text-[#d8b98f]">/</span>}
             <input
               type="text"
               value={activeChapter?.title ?? ""}
@@ -439,7 +443,9 @@ export default function WritePage() {
                 </button>
               </div>
               {noteSavedMessage && (
-                <p className="mt-3 text-xs text-[#7c5a2d]">{noteSavedMessage}</p>
+                <p className="mt-3 text-xs text-[#7c5a2d]">
+                  {noteSavedMessage}
+                </p>
               )}
             </div>
             <Link
@@ -451,7 +457,9 @@ export default function WritePage() {
           </section>
 
           <section>
-            <p className="mb-4 text-sm font-medium text-[#9b744d]">AI 扩写准备</p>
+            <p className="mb-4 text-sm font-medium text-[#9b744d]">
+              AI 扩写准备
+            </p>
 
             <div className="space-y-3">
               <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
@@ -496,7 +504,9 @@ export default function WritePage() {
                   className="w-full rounded-xl border border-[#e0c9a5] bg-[#fff8eb] px-3 py-2 text-sm text-[#4f3524] outline-none"
                 >
                   {modelOptions.map((m) => (
-                    <option key={m} value={m}>{m}</option>
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
                   ))}
                 </select>
               </div>

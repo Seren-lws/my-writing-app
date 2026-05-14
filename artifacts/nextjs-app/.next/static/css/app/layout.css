@@ -609,9 +609,6 @@
   .bg-\[\#fff8eb\]\/70 {
     background-color: color-mix(in oklab, #fff8eb 70%, transparent);
   }
-  .bg-\[\#fff8eb\]\/75 {
-    background-color: color-mix(in oklab, #fff8eb 75%, transparent);
-  }
   .bg-\[\#fff8eb\]\/90 {
     background-color: color-mix(in oklab, #fff8eb 90%, transparent);
   }
