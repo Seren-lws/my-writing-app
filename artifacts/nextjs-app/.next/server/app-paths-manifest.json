@@ -1,6 +1,3 @@
 {
-  "/model-settings/page": "app/model-settings/page.js",
-  "/write/page": "app/write/page.js",
-  "/page": "app/page.js",
-  "/prompt-preview/page": "app/prompt-preview/page.js"
+  "/write/page": "app/write/page.js"
 }
