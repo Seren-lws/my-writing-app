@@ -2,6 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import {
+  buildSystemPrompt,
+  buildUserMessage,
+  type BookSoul,
+  type AdultSettings,
+  type WritingDNA,
+  type Inspiration,
+} from "../lib/buildPrompt";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -23,10 +31,11 @@ type Chapter = {
   updatedAt: string;
 };
 
-type Inspiration = {
-  id: string;
-  content: string;
-  createdAt: string;
+type ModelSettings = {
+  baseUrl: string;
+  apiKey: string;
+  defaultModel: string;
+  modelsText: string;
 };
 
 type SaveStatus = "idle" | "writing" | "saving" | "saved";
@@ -70,6 +79,15 @@ function persistChapters(c: Chapter[]) {
   localStorage.setItem("chapters", JSON.stringify(c));
 }
 
+function safeParse<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 // ── Migration + bootstrap ──────────────────────────────────────────────────
 
 function bootstrap(urlBookId: string): {
@@ -80,7 +98,6 @@ function bootstrap(urlBookId: string): {
   let books = loadBooks();
   let chapters = loadChapters();
 
-  // Create default book if none exist
   if (books.length === 0) {
     const defaultBook: Book = {
       id: crypto.randomUUID(),
@@ -94,7 +111,6 @@ function bootstrap(urlBookId: string): {
 
   const defaultBookId = books[0].id;
 
-  // Migrate chapters: add bookId + outline + aiInstruction if missing
   let migrated = false;
   chapters = chapters.map((c) => {
     const needsBookId = !c.bookId;
@@ -113,13 +129,11 @@ function bootstrap(urlBookId: string): {
   });
   if (migrated) persistChapters(chapters);
 
-  // Determine active book
   const targetBookId =
     urlBookId && books.find((b) => b.id === urlBookId)
       ? urlBookId
       : defaultBookId;
 
-  // Ensure at least one chapter exists for this book
   const bookChapters = chapters.filter((c) => c.bookId === targetBookId);
   if (bookChapters.length === 0) {
     const first: Chapter = {
@@ -154,9 +168,14 @@ export default function WritePage() {
   const [modelOptions, setModelOptions] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
 
-  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // AI draft state
+  const [aiDraft, setAiDraft] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [aiError, setAiError] = useState("");
 
-  // Bootstrap on mount — read bookId from URL
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlBookId = params.get("bookId") ?? "";
@@ -167,16 +186,10 @@ export default function WritePage() {
     const bookChapters = c.filter((ch) => ch.bookId === bid);
     setActiveChapterId(bookChapters[0]?.id ?? "");
 
-    // Load model settings
     try {
       const raw = localStorage.getItem("ai-model-settings");
       if (raw) {
-        const ms = JSON.parse(raw) as {
-          baseUrl?: string;
-          apiKey?: string;
-          defaultModel?: string;
-          modelsText?: string;
-        };
+        const ms = JSON.parse(raw) as ModelSettings;
         const lines = (ms.modelsText ?? "")
           .split("\n")
           .map((l: string) => l.trim())
@@ -302,6 +315,110 @@ export default function WritePage() {
     window.setTimeout(() => setNoteSavedMessage(""), 1800);
   }
 
+  // ── AI write ──────────────────────────────────────────────────────────
+
+  async function handleAIWrite() {
+    const ms = safeParse<ModelSettings | null>("ai-model-settings", null);
+    if (!ms?.baseUrl || !ms?.apiKey) {
+      setAiError("请先在模型设置中配置 API URL 和密钥");
+      return;
+    }
+    if (!activeChapter) return;
+
+    const writingDNA = safeParse<WritingDNA>("writing-dna", {});
+    const bookSouls = safeParse<BookSoul[]>("book-souls", []);
+    const adultSettings = safeParse<AdultSettings | null>(
+      "adult-content-settings",
+      null,
+    );
+    const inspirations = safeParse<Inspiration[]>("inspirations", []);
+    const soul = bookSouls.find((s) => s.bookId === activeBookId);
+
+    const systemPrompt = buildSystemPrompt({
+      bookTitle: activeBook?.title ?? "",
+      writingDNA,
+      soul,
+      adultSettings,
+      inspirations,
+    });
+
+    const userMessage = buildUserMessage({
+      title: activeChapter.title,
+      content: activeChapter.content,
+      outline: activeChapter.outline,
+      aiInstruction: activeChapter.aiInstruction,
+    });
+
+    setAiDraft("");
+    setAiError("");
+    setIsStreaming(true);
+
+    abortRef.current = new AbortController();
+
+    try {
+      const res = await fetch(`${ms.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${ms.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: selectedModel || ms.defaultModel,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage },
+          ],
+          stream: true,
+        }),
+        signal: abortRef.current.signal,
+      });
+
+      if (!res.ok) {
+        throw new Error(`请求失败：${res.status} ${res.statusText}`);
+      }
+
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+
+      outer: while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const lines = decoder.decode(value).split("\n");
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6).trim();
+          if (payload === "[DONE]") break outer;
+          try {
+            const json = JSON.parse(payload);
+            const text = json.choices?.[0]?.delta?.content;
+            if (text) setAiDraft((prev) => prev + text);
+          } catch {}
+        }
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name !== "AbortError") {
+        setAiError(err.message || "请求失败，请检查配置");
+      }
+    } finally {
+      setIsStreaming(false);
+    }
+  }
+
+  function handleStopStreaming() {
+    abortRef.current?.abort();
+  }
+
+  function handleAppendDraft() {
+    if (!aiDraft) return;
+    const currentContent = activeChapter?.content ?? "";
+    const updated = updateActiveChapter({
+      content: currentContent + (currentContent ? "\n\n" : "") + aiDraft,
+    });
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    performSave(updated);
+    setAiDraft("");
+  }
+
   // ── Counts ────────────────────────────────────────────────────────────
 
   const content = activeChapter?.content ?? "";
@@ -424,6 +541,7 @@ export default function WritePage() {
 
         {/* Right sidebar */}
         <aside className="flex flex-col gap-5 border-l border-[#e0c9a5] bg-[#fff8eb]/70 p-5 overflow-y-auto">
+          {/* Quick note */}
           <section>
             <p className="mb-4 text-sm font-medium text-[#9b744d]">速记灵感</p>
             <div className="rounded-2xl border border-[#d7bd83] bg-[#fff2b8] p-4 shadow-sm">
@@ -458,6 +576,7 @@ export default function WritePage() {
             </Link>
           </section>
 
+          {/* AI section */}
           <section>
             <p className="mb-4 text-sm font-medium text-[#9b744d]">
               AI 扩写准备
@@ -496,7 +615,7 @@ export default function WritePage() {
             </div>
 
             {modelOptions.length > 0 && (
-              <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
+              <div className="mt-3 rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
                 <label className="mb-2 block text-xs font-medium text-[#9b744d]">
                   本次模型
                 </label>
@@ -514,13 +633,74 @@ export default function WritePage() {
               </div>
             )}
 
-            <Link
-              href={`/prompt-preview?bookId=${activeBookId}&chapterId=${activeChapterId}${selectedModel ? `&model=${encodeURIComponent(selectedModel)}` : ""}`}
-              className="mt-4 block w-full rounded-xl bg-[#6e4b2d] px-4 py-3 text-center text-sm text-amber-50 transition hover:bg-[#58391f]"
-            >
-              生成 Prompt 预览
-            </Link>
+            {/* Action buttons */}
+            <div className="mt-4 flex gap-2">
+              <Link
+                href={`/prompt-preview?bookId=${activeBookId}&chapterId=${activeChapterId}${selectedModel ? `&model=${encodeURIComponent(selectedModel)}` : ""}`}
+                className="flex-1 rounded-xl border border-[#d8b98f] px-3 py-2.5 text-center text-sm text-[#6e4b2d] transition hover:bg-white/70"
+              >
+                预览 Prompt
+              </Link>
+              <button
+                onClick={isStreaming ? handleStopStreaming : handleAIWrite}
+                className={`flex-1 rounded-xl px-3 py-2.5 text-sm text-amber-50 transition ${
+                  isStreaming
+                    ? "bg-[#9b744d] hover:bg-[#7a5a38]"
+                    : "bg-[#6e4b2d] hover:bg-[#58391f]"
+                }`}
+              >
+                {isStreaming ? "停止生成" : "让 AI 续写"}
+              </button>
+            </div>
           </section>
+
+          {/* AI Draft panel */}
+          {(aiDraft || aiError || isStreaming) && (
+            <section>
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-medium text-[#9b744d]">AI 草稿</p>
+                {aiDraft && (
+                  <span className="text-xs text-[#c7a984]">
+                    {aiDraft.replace(/\s/g, "").length} 字
+                  </span>
+                )}
+              </div>
+
+              {aiError && (
+                <div className="mb-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                  {aiError}
+                </div>
+              )}
+
+              {(aiDraft || isStreaming) && (
+                <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
+                  <pre className="whitespace-pre-wrap text-sm leading-7 text-[#4f3524]">
+                    {aiDraft}
+                    {isStreaming && (
+                      <span className="animate-pulse text-[#9b744d]">▋</span>
+                    )}
+                  </pre>
+                </div>
+              )}
+
+              {aiDraft && !isStreaming && (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={handleAppendDraft}
+                    className="flex-1 rounded-xl bg-[#6e4b2d] px-4 py-2 text-sm text-amber-50 transition hover:bg-[#58391f]"
+                  >
+                    追加到正文
+                  </button>
+                  <button
+                    onClick={() => setAiDraft("")}
+                    className="rounded-xl border border-[#d8b98f] px-4 py-2 text-sm text-[#9b744d] transition hover:bg-white/70"
+                  >
+                    清空
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
         </aside>
       </div>
 
