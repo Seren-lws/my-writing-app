@@ -1,1 +1,189 @@
+# ✒️ 声声的写作小屋
 
+> "不是让你写得更快，是让你写得更有人陪。"
+
+一个给独立作者用的、带 AI 陪伴感的云端写作空间。核心价值不是效率工具，而是**陪伴型创作空间**——让独自写作的人不再孤独，让 AI 不再是冷冰冰的代笔，而是真正懂你的搭子。
+
+## 技术栈
+
+| 技术 | 说明 |
+|------|------|
+| Next.js (React 19) | 前端框架，SSR + API 路由一体化 |
+| TypeScript | 全项目类型安全 |
+| Tailwind CSS 4 | 样式方案 |
+| Drizzle ORM | 数据库 ORM（数据库待接入） |
+| TanStack React Query | 数据请求与缓存 |
+| Framer Motion | 动画与交互 |
+| Zod | 数据校验 |
+| pnpm Workspace | Monorepo 管理 |
+
+## 项目结构
+
+```
+my-writing-app/
+├── artifacts/
+│   ├── api-server/          # 后端 API 服务
+│   ├── mockup-sandbox/      # UI 原型沙盒
+│   └── nextjs-app/          # 主应用（Next.js）
+├── lib/
+│   ├── api-client-react/    # React API 客户端 hooks
+│   ├── api-spec/            # API 接口定义与类型
+│   ├── api-zod/             # Zod 校验 schema
+│   └── db/                  # 数据库层（待接入）
+├── scripts/                 # 构建与工具脚本
+├── package.json             # 根工作区配置
+├── pnpm-workspace.yaml      # 工作区定义 & 依赖目录
+├── tsconfig.base.json
+└── tsconfig.json
+```
+
+项目采用 pnpm workspace monorepo 结构：`artifacts/` 下放可部署的应用，`lib/` 下放跨应用复用的共享库。API 层通过 `api-spec` 统一定义接口类型，`api-zod` 提供校验，`api-client-react` 封装为前端可用的 hooks。
+
+## 核心功能
+
+### 🧠 四层分层记忆系统
+
+项目灵魂所在。每次 AI 调用时，自动拼装四层 system prompt，让 AI 真正"记住"你在写什么：
+
+1. **写作 DNA** — 语言风格、禁忌、偏好、参照作家
+2. **书籍灵魂卡** — 这本书的基调、世界观规则、文体
+3. **章节上下文** — 已完成章节摘要 + 最近几章全文 + 当前段前后文
+4. **语义检索** — 从全书内容中检索相关段落（向量数据库）
+
+用户可以随时查看"这次 AI 到底读到了什么"，四层内容都可见可编辑。
+
+### 📝 长文编辑器
+
+为长篇写作优化：字号/行距/字体可调、查找替换（支持正则）、错别字检测、重复词高亮、多主题切换、专注模式、实时字数统计。
+
+### 🏠 夜晚书桌首页
+
+打开应用像回到深夜的书房——桌历（打卡）、笔记本（写作）、奖杯（成绩）、便签纸（灵感）、齿轮（设置），每个物件都是功能入口。
+
+### 💌 读者卡陪伴系统
+
+模拟不同性格的"读者"：夸夸迷妹、急催党、细腻分析派、毒舌老读者……写不下去时给你正反馈，写完章节收到"催更留言"。
+
+### 📋 灵感收集器
+
+全局便签系统，多入口（桌面便签 / 快捷键 / PWA 分享）。零强制整理，AI 写作时自动语义检索，让随手记的灵感在需要时浮现。
+
+### 🔄 对话转小说体工作台
+
+把 SillyTavern / ChatGPT 对话转换为小说正文。双栏布局，支持调节叙述视角、文体、详略、节奏，输出永远是草稿态。
+
+### 📅 日历打卡 & 数据看板
+
+月历追踪每日写作字数和发布状态，连续打卡天数和字数目标进度条。支持半自动从 po18 抓取作品数据。
+
+## 当前状态
+
+项目处于早期开发阶段。Monorepo 骨架和 API 分层架构已搭建完成，数据库尚未接入。
+
+### MVP — 先用起来
+
+- [ ] 作品 / 章节 CRUD
+- [ ] 基础编辑器（字号、查找替换、字数统计、主题）
+- [ ] 侧边栏：灵感 / 大纲 / 人设 / 设定
+- [ ] 灵感收集器（基础版）
+- [ ] AI 对话入口（第一层 + 第二层记忆）
+- [ ] 数据库接入
+- [ ] PWA 配置
+
+### v2 — 让 AI 真的懂你
+
+- [ ] 章节上下文自动拼装（第三层）
+- [ ] 语义检索（第四层）
+- [ ] 自动索引机制
+- [ ] 大纲扩写标签系统
+- [ ] 风格样本库 & Prompt 透明度
+- [ ] 对话转小说体工作台
+
+### v3 — 陪伴感
+
+- [ ] 读者卡系统 & 催促/鼓励/反馈区
+- [ ] 日历打卡 & 游戏化反馈
+
+### v4 — 数据洞察
+
+- [ ] po18 数据抓取 & 成绩看板
+- [ ] 评论 AI 分析 & 月度写作报告
+
+## 快速开始
+
+### 环境要求
+
+- Node.js 18+
+- pnpm 9+
+
+### 安装与运行
+
+```bash
+# 克隆仓库
+git clone https://github.com/Seren-lws/my-writing-app.git
+cd my-writing-app
+
+# 安装依赖
+pnpm install
+
+# 启动 Next.js 主应用开发服务器
+pnpm --filter @workspace/nextjs-app dev
+```
+
+默认访问 `http://localhost:19344`，也可通过 `PORT` 环境变量指定端口。
+
+### 构建
+
+```bash
+# 构建全部 artifacts（含类型检查）
+pnpm run build
+
+# 只构建主应用
+pnpm --filter @workspace/nextjs-app build
+```
+
+## 部署到 Railway
+
+项目已成功部署到 [Railway](https://railway.com)。
+
+### 方案一：指定子目录（推荐）
+
+在 Railway 项目设置中：
+
+| 配置项 | 值 |
+|--------|-----|
+| Root Directory | `artifacts/nextjs-app` |
+| Build Command | `pnpm install && pnpm build` |
+| Start Command | `pnpm start` |
+
+Railway 会自动识别 Next.js 并注入 `PORT` 环境变量，应用已配置自动读取。
+
+### 方案二：从根目录部署（Monorepo 模式）
+
+| 配置项 | 值 |
+|--------|-----|
+| Build Command | `pnpm install && pnpm --filter @workspace/nextjs-app build` |
+| Start Command | `pnpm --filter @workspace/nextjs-app start` |
+
+### 环境变量
+
+| 变量名 | 说明 | 是否必须 |
+|--------|------|----------|
+| `PORT` | 监听端口，Railway 自动注入 | 否（默认 19344） |
+| `DATABASE_URL` | 数据库连接字符串（数据库功能待接入） | 否 |
+
+## 设计理念
+
+**关于 AI**：AI 生成的内容永远是"草稿"，不会直接覆盖正式章节。这不是替你写作的工具，而是帮你更好地写作的搭子。
+
+**关于隐私**：创作内容加密存储，AI Key 由用户自己保管。
+
+**关于审美**：UI 追求温馨、克制、不"AI 味"。打开应用的感觉应该像回到深夜的书房，不是打开一个冰冷的 SaaS 后台。
+
+## 许可证
+
+MIT
+
+---
+
+*这个项目的成功标准只有一个：作者真的用它完成了自己的创作。*
