@@ -151,8 +151,11 @@ export default function WritePage() {
   const [modelOptions, setModelOptions] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
   const [advisorOpen, setAdvisorOpen] = useState(false);
+  const [aiDraft, setAiDraft] = useState("");
+  const [aiStreaming, setAiStreaming] = useState(false);
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const aiAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -296,6 +299,129 @@ export default function WritePage() {
     setQuickNote("");
     setNoteSavedMessage("已贴到灵感墙");
     window.setTimeout(() => setNoteSavedMessage(""), 1800);
+  }
+
+  // ── AI 扩写 ───────────────────────────────────────────────────────────
+
+  async function handleAIWrite() {
+    if (aiStreaming) {
+      aiAbortRef.current?.abort();
+      return;
+    }
+
+    let ms: { baseUrl?: string; apiKey?: string; defaultModel?: string } = {};
+    try {
+      const raw = localStorage.getItem("ai-model-settings");
+      if (raw) ms = JSON.parse(raw);
+    } catch {}
+
+    const baseUrl = (ms.baseUrl ?? "").replace(/\/$/, "") || "https://api.openai.com";
+    const apiKey = ms.apiKey ?? "";
+
+    // Build system prompt from stored data
+    let dna = "";
+    let soul = "";
+    let characters: Record<string, string>[] = [];
+    try {
+      const r = localStorage.getItem("writing-dna");
+      if (r) {
+        const d = JSON.parse(r);
+        dna = [
+          d.languageStyle && `语言风格：${d.languageStyle}`,
+          d.preferences && `写作偏好：${d.preferences}`,
+          d.taboos && `禁忌：${d.taboos}`,
+        ].filter(Boolean).join("\n");
+      }
+    } catch {}
+    try {
+      const r = localStorage.getItem(`book-soul-${activeBookId}`);
+      if (r) {
+        const s = JSON.parse(r);
+        soul = [
+          s.tone && `基调：${s.tone}`,
+          s.relationship && `主角关系：${s.relationship}`,
+          s.worldRules && `世界观：${s.worldRules}`,
+          s.mustNotBreak && `不能破坏：${s.mustNotBreak}`,
+        ].filter(Boolean).join("\n");
+      }
+    } catch {}
+    try {
+      const r = localStorage.getItem("book-characters");
+      if (r) {
+        const all = JSON.parse(r);
+        characters = all.filter((c: Record<string, string>) => c.bookId === activeBookId);
+      }
+    } catch {}
+
+    const charBlock = characters.length > 0
+      ? characters.map((c) => `${c.role ? `[${c.role}] ` : ""}${c.name}${c.alias ? `（${c.alias}）` : ""}${c.personality ? `：${c.personality}` : ""}`).join("\n")
+      : "";
+
+    let systemPrompt = "你是一位专业的中文小说写作助手，根据作者的风格设定和章节要求续写或扩写正文。直接输出正文内容，不要加标题或解释。";
+    if (dna) systemPrompt += `\n\n【写作风格】\n${dna}`;
+    if (soul) systemPrompt += `\n\n【书籍设定】\n${soul}`;
+    if (charBlock) systemPrompt += `\n\n【主要角色】\n${charBlock}`;
+
+    const chapter = activeChapter;
+    const userParts: string[] = [];
+    if (chapter?.outline) userParts.push(`本章大纲：${chapter.outline}`);
+    if (chapter?.content) userParts.push(`已有正文（请在此基础上续写）：\n${chapter.content}`);
+    if (chapter?.aiInstruction) userParts.push(`特别要求：${chapter.aiInstruction}`);
+    if (userParts.length === 0) userParts.push("请开始写这一章的正文。");
+
+    setAiDraft("");
+    setAiStreaming(true);
+    const abort = new AbortController();
+    aiAbortRef.current = abort;
+    let accumulated = "";
+
+    try {
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        signal: abort.signal,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: selectedModel,
+          stream: true,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userParts.join("\n\n") },
+          ],
+        }),
+      });
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      if (!reader) throw new Error("no reader");
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const line of decoder.decode(value, { stream: true }).split("\n")) {
+          const t = line.trim();
+          if (!t.startsWith("data:")) continue;
+          const json = t.slice(5).trim();
+          if (json === "[DONE]") break;
+          try {
+            const delta = JSON.parse(json).choices?.[0]?.delta?.content ?? "";
+            if (delta) { accumulated += delta; setAiDraft(accumulated); }
+          } catch {}
+        }
+      }
+    } catch (e: unknown) {
+      if (e instanceof Error && e.name !== "AbortError") {
+        setAiDraft("（请求出错，请检查模型设置）");
+      }
+    } finally {
+      setAiStreaming(false);
+    }
+  }
+
+  function handleAppendDraft() {
+    if (!aiDraft.trim()) return;
+    const sep = content.trim() ? "\n\n" : "";
+    updateActiveChapter({ content: content + sep + aiDraft });
+    setAiDraft("");
   }
 
   // ── Counts ────────────────────────────────────────────────────────────
@@ -535,12 +661,44 @@ export default function WritePage() {
               </div>
             )}
 
-            <Link
-              href={`/prompt-preview?bookId=${activeBookId}&chapterId=${activeChapterId}${selectedModel ? `&model=${encodeURIComponent(selectedModel)}` : ""}`}
-              className="mt-4 block w-full rounded-xl bg-[#6e4b2d] px-4 py-3 text-center text-sm text-amber-50 transition hover:bg-[#58391f]"
+            <button
+              onClick={handleAIWrite}
+              className={`mt-4 w-full rounded-xl px-4 py-3 text-sm text-amber-50 transition ${
+                aiStreaming
+                  ? "bg-[#9b744d] hover:bg-[#7a5c38]"
+                  : "bg-[#6e4b2d] hover:bg-[#58391f]"
+              }`}
             >
-              生成 Prompt 预览
-            </Link>
+              {aiStreaming ? "⏹ 停止生成" : "✍️ AI 扩写"}
+            </button>
+
+            {aiDraft && (
+              <div className="mt-3 rounded-2xl border border-[#e0c9a5] bg-[#fffaf0] p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-[#9b744d]">
+                    草稿 · {aiDraft.replace(/\s/g, "").length} 字
+                  </span>
+                  <button
+                    onClick={() => setAiDraft("")}
+                    className="text-xs text-[#c7a984] hover:text-[#9b744d] transition"
+                  >
+                    清空
+                  </button>
+                </div>
+                <p className="whitespace-pre-wrap text-sm leading-7 text-[#4f3524]">
+                  {aiDraft}
+                  {aiStreaming && <span className="animate-pulse text-[#9b744d]">▍</span>}
+                </p>
+                {!aiStreaming && (
+                  <button
+                    onClick={handleAppendDraft}
+                    className="mt-3 w-full rounded-xl bg-[#6e4b2d] px-4 py-2 text-xs text-amber-50 transition hover:bg-[#58391f]"
+                  >
+                    追加到正文 →
+                  </button>
+                )}
+              </div>
+            )}
           </section>
         </aside>
       </div>
