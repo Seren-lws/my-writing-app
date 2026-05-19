@@ -3,8 +3,8 @@ import "./globals.css";
 import Nav from "./components/nav";
 
 export const metadata: Metadata = {
-  title: "Inkwell",
-  description: "Your cozy writing space",
+  title: "声声的写作小屋",
+  description: "更多陪伴的专属写作空间",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <body className="flex bg-stone-50 text-stone-800 min-h-screen font-sans antialiased">
         <Nav />
         <main className="flex-1 overflow-auto">{children}</main>
