@@ -127,6 +127,8 @@ function bootstrap(urlBookId: string): {
       bookId: targetBookId,
       title: "第一章",
       content: "",
+      outline: "",
+      aiInstruction: "",
       createdAt: ts(),
       updatedAt: ts(),
     };
