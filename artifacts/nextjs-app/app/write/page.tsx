@@ -214,6 +214,17 @@ export default function WritePage() {
     setSaveStatus("saving");
     setTimeout(() => {
       persistChapters(updatedChapters);
+      try {
+        const _d = new Date();
+        const todayStr = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, "0")}-${String(_d.getDate()).padStart(2, "0")}`;
+        const totalWords = updatedChapters.reduce(
+          (sum, c) => sum + c.content.replace(/\s/g, "").length,
+          0,
+        );
+        const cal = JSON.parse(localStorage.getItem("writing-calendar") || "{}");
+        cal[todayStr] = { ...(cal[todayStr] ?? { checkedIn: false }), wordCount: totalWords };
+        localStorage.setItem("writing-calendar", JSON.stringify(cal));
+      } catch {}
       setSavedTime(formatTime(ts()));
       setSaveStatus("saved");
     }, 400);
