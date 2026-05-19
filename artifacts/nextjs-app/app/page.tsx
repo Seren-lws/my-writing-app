@@ -20,10 +20,11 @@ export default function Home() {
             </div>
 
             <Link
-              href="/style"
-              className="rounded-full border border-[#d8b98f] bg-[#fff8eb]/70 px-5 py-2 text-sm text-[#6e4b2d] shadow-sm backdrop-blur transition hover:bg-white"
+              href="/model-settings"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d8b98f] bg-[#fff8eb]/70 text-xl shadow-sm backdrop-blur transition hover:bg-white"
+              title="模型设置"
             >
-              ⚙️ 我的风格
+              ⚙️
             </Link>
           </header>
 
@@ -157,27 +158,14 @@ export default function Home() {
 
                 <Link
                   href="/adult-settings"
-                  className="col-span-2 rounded-2xl border border-[#dbc29e] bg-[#fff8eb] p-6 shadow-md transition hover:-translate-y-1 hover:shadow-lg"
+                  className="col-span-4 rounded-2xl border border-[#dbc29e] bg-[#fff8eb] p-6 shadow-md transition hover:-translate-y-1 hover:shadow-lg"
                 >
                   <div className="text-3xl">🔞</div>
                   <h3 className="mt-4 text-xl font-semibold text-[#4f3524]">
                     成人创作设置
                   </h3>
                   <p className="mt-2 text-sm text-[#8a6a4d]">
-                    设置作品分级、描写偏好和边界
-                  </p>
-                </Link>
-
-                <Link
-                  href="/model-settings"
-                  className="col-span-2 rounded-2xl border border-[#dbc29e] bg-[#fff8eb] p-6 shadow-md transition hover:-translate-y-1 hover:shadow-lg"
-                >
-                  <div className="text-3xl">⚙️</div>
-                  <h3 className="mt-4 text-xl font-semibold text-[#4f3524]">
-                    模型设置
-                  </h3>
-                  <p className="mt-2 text-sm text-[#8a6a4d]">
-                    配置中转站 URL、API Key 和默认模型
+                    设置作品分级、描写偏好和边界。
                   </p>
                 </Link>
               </div>
