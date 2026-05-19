@@ -376,7 +376,7 @@ export default function WritePage() {
     let accumulated = "";
 
     try {
-      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+      const res = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
         signal: abort.signal,
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
