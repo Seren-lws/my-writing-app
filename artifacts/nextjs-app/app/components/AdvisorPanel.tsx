@@ -176,7 +176,7 @@ export default function AdvisorPanel({
         const def = ms.defaultModel?.trim() ?? "";
         // 默认模型始终排第一，可选模型列表去重追加在后面
         const opts = def
-          ? [def, ...lines.filter((l) => l !== def)]
+          ? [def, ...lines.filter((l: string) => l !== def)]
           : lines;
         setModelOptions(opts);
         const saved = localStorage.getItem(modelKey);
