@@ -183,7 +183,9 @@ export default function WritePage() {
         const opts =
           lines.length > 0 ? lines : ms.defaultModel ? [ms.defaultModel] : [];
         setModelOptions(opts);
-        setSelectedModel(ms.defaultModel ?? opts[0] ?? "");
+        // 如果 defaultModel 不在列表里，回退到第一个选项，避免 select 显示和 state 不一致
+        const inList = opts.includes(ms.defaultModel ?? "");
+        setSelectedModel(inList ? (ms.defaultModel ?? opts[0] ?? "") : (opts[0] ?? ""));
       }
     } catch {}
 
@@ -381,7 +383,7 @@ export default function WritePage() {
         signal: abort.signal,
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
         body: JSON.stringify({
-          model: selectedModel,
+          model: selectedModel || ms.defaultModel || "",
           stream: true,
           messages: [
             { role: "system", content: systemPrompt },
