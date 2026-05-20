@@ -616,7 +616,7 @@ export default function WritePage() {
           {/* 军师 tab */}
           {mobileTab === "advisor" && (
             <div className="h-full">
-              <AdvisorPanel bookId={activeBookId} bookTitle={activeBook?.title ?? ""} chapters={bookChapters} activeChapterId={activeChapterId} />
+              <AdvisorPanel bookId={activeBookId} chapters={bookChapters} activeChapterId={activeChapterId} />
             </div>
           )}
         </div>
@@ -711,7 +711,6 @@ export default function WritePage() {
             <div className="h-96 shrink-0 border-t border-[#e0c9a5]">
               <AdvisorPanel
                 bookId={activeBookId}
-                bookTitle={activeBook?.title ?? ""}
                 chapters={bookChapters}
                 activeChapterId={activeChapterId}
               />
