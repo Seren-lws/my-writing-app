@@ -180,12 +180,13 @@ export default function WritePage() {
           .split("\n")
           .map((l: string) => l.trim())
           .filter(Boolean);
-        const opts =
-          lines.length > 0 ? lines : ms.defaultModel ? [ms.defaultModel] : [];
+        const def = ms.defaultModel?.trim() ?? "";
+        // 默认模型始终排第一，可选模型列表去重追加在后面
+        const opts = def
+          ? [def, ...lines.filter((l) => l !== def)]
+          : lines;
         setModelOptions(opts);
-        // 如果 defaultModel 不在列表里，回退到第一个选项，避免 select 显示和 state 不一致
-        const inList = opts.includes(ms.defaultModel ?? "");
-        setSelectedModel(inList ? (ms.defaultModel ?? opts[0] ?? "") : (opts[0] ?? ""));
+        setSelectedModel(opts[0] ?? "");
       }
     } catch {}
 
