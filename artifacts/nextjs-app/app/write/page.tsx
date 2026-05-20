@@ -153,6 +153,7 @@ export default function WritePage() {
   const [advisorOpen, setAdvisorOpen] = useState(false);
   const [aiDraft, setAiDraft] = useState("");
   const [aiStreaming, setAiStreaming] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"write" | "chapters" | "tools" | "advisor">("write");
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiAbortRef = useRef<AbortController | null>(null);
@@ -446,7 +447,7 @@ export default function WritePage() {
   // ── Render ────────────────────────────────────────────────────────────
 
   return (
-    <main className="flex h-screen flex-col bg-[#f8f0df] text-[#4f3524]">
+    <main className="flex h-[100dvh] flex-col bg-[#f8f0df] text-[#4f3524]">
       {/* Header */}
       <header className="flex items-center justify-between border-b border-[#e0c9a5] bg-[#fff8eb]/90 px-8 py-4 shadow-sm">
         <div className="flex items-center gap-4">
@@ -493,7 +494,153 @@ export default function WritePage() {
         </div>
       </header>
 
-      <div className="grid flex-1 grid-cols-[220px_1fr_280px] overflow-hidden">
+      {/* ── Mobile tab content ─────────────────────────────────────── */}
+      <div className="flex flex-1 flex-col overflow-hidden md:hidden">
+        <div className="flex-1 overflow-hidden">
+
+          {/* 写作 tab */}
+          {mobileTab === "write" && (
+            <div className="flex h-full flex-col overflow-hidden">
+              <div className="flex-1 overflow-auto px-4 py-6">
+                <textarea
+                  value={content}
+                  onChange={(e) => updateActiveChapter({ content: e.target.value })}
+                  className="min-h-[55vh] w-full resize-none bg-transparent text-base leading-8 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
+                  placeholder="从这里开始写吧……"
+                />
+              </div>
+              <div className="flex justify-center border-t border-[#e0c9a5] bg-[#fff8eb]/60 py-2">
+                <button
+                  onClick={() => setMobileTab("advisor")}
+                  className="rounded-full border border-[#d8b98f] bg-[#fff8eb] px-5 py-1.5 text-sm text-[#6e4b2d] shadow-sm"
+                >
+                  🎯 问军师
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 章节 tab */}
+          {mobileTab === "chapters" && (
+            <div className="flex h-full flex-col p-4">
+              <div className="flex-1 space-y-2 overflow-y-auto">
+                {bookChapters.map((ch) => (
+                  <button
+                    key={ch.id}
+                    onClick={() => { handleSwitchChapter(ch.id); setMobileTab("write"); }}
+                    className={`w-full rounded-xl px-4 py-3 text-left text-sm transition ${
+                      ch.id === activeChapterId ? "bg-white text-[#4f3524] shadow-sm" : "text-[#9b744d] hover:bg-white/70"
+                    }`}
+                  >
+                    <span className="block font-medium">{ch.title || "未命名章节"}</span>
+                    <span className="mt-0.5 block text-xs text-[#c7a984]">{ch.content.replace(/\s/g, "").length} 字</span>
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => { handleAddChapter(); setMobileTab("write"); }}
+                className="mt-3 w-full rounded-xl border border-dashed border-[#d8b98f] px-4 py-2.5 text-sm text-[#9b744d]"
+              >
+                + 新章节
+              </button>
+              <Link
+                href={`/book-soul?bookId=${activeBookId}`}
+                className="mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#9b744d]"
+              >
+                <span>🪬</span><span>书籍灵魂卡</span>
+              </Link>
+            </div>
+          )}
+
+          {/* 工具 tab */}
+          {mobileTab === "tools" && (
+            <div className="h-full overflow-y-auto p-4 space-y-4">
+              {/* 速记灵感 */}
+              <div className="rounded-2xl border border-[#d7bd83] bg-[#fff2b8] p-4">
+                <p className="mb-2 text-xs font-medium text-[#9b744d]">速记灵感</p>
+                <textarea
+                  value={quickNote}
+                  onChange={(e) => setQuickNote(e.target.value)}
+                  className="min-h-20 w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#a8874f]"
+                  placeholder="突然想到的台词、伏笔……先丢这里。"
+                />
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-xs text-[#9b744d]">{quickNote.trim().length} 字</span>
+                  <button onClick={saveQuickNote} className="rounded-full bg-[#6e4b2d] px-4 py-1.5 text-xs text-amber-50">贴到灵感墙</button>
+                </div>
+                {noteSavedMessage && <p className="mt-2 text-xs text-[#7c5a2d]">{noteSavedMessage}</p>}
+              </div>
+              {/* 大纲 + 指令 */}
+              <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
+                <label className="mb-2 block text-xs font-medium text-[#9b744d]">本章大纲</label>
+                <textarea rows={3} value={activeChapter?.outline ?? ""} onChange={(e) => updateActiveChapter({ outline: e.target.value })}
+                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
+                  placeholder="这一章要写什么？" />
+              </div>
+              <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
+                <label className="mb-2 block text-xs font-medium text-[#9b744d]">本次指令</label>
+                <textarea rows={2} value={activeChapter?.aiInstruction ?? ""} onChange={(e) => updateActiveChapter({ aiInstruction: e.target.value })}
+                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
+                  placeholder="对 AI 的特别要求……" />
+              </div>
+              {modelOptions.length > 0 && (
+                <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
+                  <label className="mb-2 block text-xs font-medium text-[#9b744d]">本次模型</label>
+                  <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}
+                    className="w-full rounded-xl border border-[#e0c9a5] bg-[#fff8eb] px-3 py-2 text-sm text-[#4f3524] outline-none">
+                    {modelOptions.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+              )}
+              <button onClick={handleAIWrite}
+                className={`w-full rounded-xl px-4 py-3 text-sm text-amber-50 transition ${aiStreaming ? "bg-[#9b744d]" : "bg-[#6e4b2d]"}`}>
+                {aiStreaming ? "⏹ 停止生成" : "✍️ AI 扩写"}
+              </button>
+              {aiDraft && (
+                <div className="rounded-2xl border border-[#e0c9a5] bg-[#fffaf0] p-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs font-medium text-[#9b744d]">草稿 · {aiDraft.replace(/\s/g, "").length} 字</span>
+                    <button onClick={() => setAiDraft("")} className="text-xs text-[#c7a984]">清空</button>
+                  </div>
+                  <p className="whitespace-pre-wrap text-sm leading-7 text-[#4f3524]">
+                    {aiDraft}{aiStreaming && <span className="animate-pulse text-[#9b744d]">▍</span>}
+                  </p>
+                  {!aiStreaming && (
+                    <button onClick={handleAppendDraft} className="mt-3 w-full rounded-xl bg-[#6e4b2d] px-4 py-2 text-xs text-amber-50">追加到正文 →</button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 军师 tab */}
+          {mobileTab === "advisor" && (
+            <div className="h-full">
+              <AdvisorPanel bookId={activeBookId} bookTitle={activeBook?.title ?? ""} chapters={bookChapters} activeChapterId={activeChapterId} />
+            </div>
+          )}
+        </div>
+
+        {/* Bottom tab bar */}
+        <nav className="flex shrink-0 border-t border-[#e0c9a5] bg-[#fff8eb]/95">
+          {(["write", "chapters", "tools", "advisor"] as const).map((tab) => {
+            const items = { write: ["✍️", "写作"], chapters: ["📑", "章节"], tools: ["🔧", "工具"], advisor: ["🎯", "军师"] };
+            const [icon, label] = items[tab];
+            return (
+              <button key={tab} onClick={() => setMobileTab(tab)}
+                className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs transition ${
+                  mobileTab === tab ? "text-[#6e4b2d]" : "text-[#c7a984]"
+                }`}>
+                <span className="text-lg">{icon}</span>
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* ── Desktop 3-column layout ─────────────────────────────────── */}
+      <div className="hidden flex-1 md:grid md:grid-cols-[220px_1fr_280px] md:overflow-hidden">
         {/* Left sidebar — chapters */}
         <aside className="flex flex-col border-r border-[#e0c9a5] bg-[#fff8eb]/70 p-5">
           <p className="mb-4 text-sm font-medium text-[#9b744d]">章节</p>
@@ -706,8 +853,8 @@ export default function WritePage() {
         </aside>
       </div>
 
-      {/* Footer */}
-      <footer className="flex items-center gap-6 border-t border-[#e0c9a5] bg-[#fff8eb]/90 px-8 py-3 text-xs text-[#9b744d]">
+      {/* Footer — desktop only */}
+      <footer className="hidden items-center gap-6 border-t border-[#e0c9a5] bg-[#fff8eb]/90 px-8 py-3 text-xs text-[#9b744d] md:flex">
         <span>{wordCount} 字</span>
         <span>{characterCount} 字符</span>
         <span>{paragraphCount} 段</span>
