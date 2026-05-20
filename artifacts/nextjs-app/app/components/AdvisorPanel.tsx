@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// ── Types ──────────────────────────────────────────────────────────────────
-
 type Chapter = {
   id: string;
   bookId: string;
@@ -11,357 +9,333 @@ type Chapter = {
   content: string;
   outline: string;
   aiInstruction: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-};
+type Message = { role: "user" | "assistant"; content: string };
 
-type ModelSettings = {
-  baseUrl: string;
-  apiKey: string;
-  defaultModel: string;
-  modelsText: string;
-};
+function buildAdvisorPrompt(
+  bookId: string,
+  chapters: Chapter[],
+  activeChapterId: string,
+): string {
+  let dna = "";
+  let soul = "";
+  let characters: Record<string, string>[] = [];
+  let adultSettings = "";
 
-type WritingDNA = {
-  languageStyle?: string;
-  preferences?: string;
-  taboos?: string;
-  references?: string;
-  relationshipTension?: string;
-};
+  try {
+    const raw = localStorage.getItem("writing-dna");
+    if (raw) {
+      const d = JSON.parse(raw);
+      dna = [
+        d.writingStyle && `写作风格：${d.writingStyle}`,
+        d.narrativePov && `叙事视角：${d.narrativePov}`,
+        d.toneVoice && `语调：${d.toneVoice}`,
+        d.avoidWords && `避免用词：${d.avoidWords}`,
+        d.taboos && `禁忌：${d.taboos}`,
+      ]
+        .filter(Boolean)
+        .join("\n");
+    }
+  } catch {}
 
-type BookSoul = {
-  bookId: string;
-  tone?: string;
-  relationship?: string;
-  worldRules?: string;
-  mustNotBreak?: string;
-  keywords?: string;
-  aiReminder?: string;
-};
+  try {
+    const raw = localStorage.getItem(`book-soul-${bookId}`);
+    if (raw) {
+      const s = JSON.parse(raw);
+      soul = [
+        s.genre && `类型：${s.genre}`,
+        s.theme && `主题：${s.theme}`,
+        s.worldview && `世界观：${s.worldview}`,
+        s.coreConflict && `核心冲突：${s.coreConflict}`,
+        s.emotionalCore && `情感内核：${s.emotionalCore}`,
+        s.targetReader && `目标读者：${s.targetReader}`,
+        s.extraNotes && `备注：${s.extraNotes}`,
+      ]
+        .filter(Boolean)
+        .join("\n");
+    }
+  } catch {}
 
-type Character = {
-  id: string;
-  bookId: string;
-  name: string;
-  alias: string;
-  age: string;
-  gender: string;
-  role: string;
-  appearance: string;
-  personality: string;
-  personalityOrigin: string;
-  background: string;
-  relationships: string;
-  speechPattern: string;
-  aiNotes: string;
-};
+  try {
+    const raw = localStorage.getItem("book-characters");
+    if (raw) {
+      const all = JSON.parse(raw);
+      characters = all.filter(
+        (c: Record<string, string>) => c.bookId === bookId,
+      );
+    }
+  } catch {}
 
-type AdultSettings = {
-  enabled: boolean;
-  rating: string;
-  writingStyle: string;
-  relationBoundary: string;
-};
+  try {
+    const raw = localStorage.getItem(`adult-settings-${bookId}`);
+    if (raw) {
+      const a = JSON.parse(raw);
+      adultSettings = [
+        a.rating && `作品分级：${a.rating}`,
+        a.preferences && `描写偏好：${a.preferences}`,
+        a.boundaries && `边界设定：${a.boundaries}`,
+      ]
+        .filter(Boolean)
+        .join("\n");
+    }
+  } catch {}
+
+  const bookChapters = chapters.filter((c) => c.bookId === bookId);
+  const activeIdx = bookChapters.findIndex((c) => c.id === activeChapterId);
+
+  const chapterMap = bookChapters
+    .map(
+      (c, i) =>
+        `第${i + 1}章《${c.title || "未命名"}》${c.outline ? `\n  大纲：${c.outline}` : ""}`,
+    )
+    .join("\n");
+
+  const recentChapters = bookChapters
+    .slice(Math.max(0, activeIdx - 2), activeIdx)
+    .map((c) => `【${c.title}】\n${c.content}`)
+    .join("\n\n---\n\n");
+
+  const currentChapter = bookChapters[activeIdx];
+
+  let prompt =
+    `你是这本书的写作军师，深度了解这本书的一切，帮助作者策划剧情、构建结构、分析人物、触发灵感。` +
+    `你的风格是：直接、有洞察力、像一个真正懂创作的编辑朋友。`;
+
+  if (soul) prompt += `\n\n## 书籍灵魂\n${soul}`;
+  if (dna) prompt += `\n\n## 作者写作风格\n${dna}`;
+  if (adultSettings) prompt += `\n\n## 作品设定\n${adultSettings}`;
+
+  if (characters.length > 0) {
+    prompt += `\n\n## 人物档案`;
+    for (const ch of characters) {
+      prompt += `\n\n### ${ch.name}${ch.alias ? `（${ch.alias}）` : ""}`;
+      if (ch.role) prompt += `\n角色定位：${ch.role}`;
+      if (ch.age || ch.gender)
+        prompt += `\n基本信息：${[ch.age && `${ch.age}岁`, ch.gender].filter(Boolean).join("，")}`;
+      if (ch.appearance) prompt += `\n外貌：${ch.appearance}`;
+      if (ch.personality) prompt += `\n性格：${ch.personality}`;
+      if (ch.personalityOrigin)
+        prompt += `\n性格形成原因：${ch.personalityOrigin}`;
+      if (ch.background) prompt += `\n成长背景：${ch.background}`;
+      if (ch.relationships) prompt += `\n关系网络：${ch.relationships}`;
+      if (ch.speechPattern) prompt += `\n说话方式：${ch.speechPattern}`;
+      if (ch.aiNotes) prompt += `\n给AI的特别说明：${ch.aiNotes}`;
+    }
+  }
+
+  if (chapterMap) prompt += `\n\n## 全书章节目录\n${chapterMap}`;
+  if (recentChapters) prompt += `\n\n## 近期章节正文\n${recentChapters}`;
+  if (currentChapter) {
+    prompt += `\n\n## 当前章节《${currentChapter.title}》`;
+    if (currentChapter.outline) prompt += `\n大纲：${currentChapter.outline}`;
+    if (currentChapter.content)
+      prompt += `\n\n正文：\n${currentChapter.content}`;
+  }
+
+  return prompt;
+}
 
 type Props = {
   bookId: string;
-  bookTitle: string;
   chapters: Chapter[];
   activeChapterId: string;
 };
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-
-function safeParse<T>(key: string, fallback: T): T {
-  try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; }
-  catch { return fallback; }
-}
-
-// ── System prompt ──────────────────────────────────────────────────────────
-
-function buildAdvisorPrompt(params: {
-  bookTitle: string;
-  writingDNA: WritingDNA;
-  soul: BookSoul | undefined;
-  characters: Character[];
-  chapters: Chapter[];
-  activeChapterId: string;
-  adultSettings: AdultSettings | null;
-}): string {
-  const { bookTitle, writingDNA, soul, characters, chapters, activeChapterId, adultSettings } = params;
-  const sections: string[] = [];
-
-  sections.push(
-    `你是《${bookTitle || "这本书"}》的写作军师。` +
-    `帮助作者从宏观视角把握全书，提供剧情策略、结构分析、人物洞察、灵感触发等创作智慧。` +
-    `你不替作者写正文，而是分析、提问、给可能性、指出问题。` +
-    `语气像一个懂创作的直接朋友：有料、不废话、敢直说。`
-  );
-
-  // Writing DNA
-  const dnaLines = [
-    writingDNA.languageStyle && `语言风格：${writingDNA.languageStyle}`,
-    writingDNA.preferences && `写作偏好：${writingDNA.preferences}`,
-    writingDNA.taboos && `禁忌：${writingDNA.taboos}`,
-    writingDNA.references && `参考作品：${writingDNA.references}`,
-    writingDNA.relationshipTension && `人物关系偏好：${writingDNA.relationshipTension}`,
-  ].filter(Boolean);
-  if (dnaLines.length > 0) sections.push(`【作者写作 DNA】\n${dnaLines.join("\n")}`);
-
-  // Book soul
-  if (soul) {
-    const lines = [
-      `书名：${bookTitle}`,
-      soul.tone && `核心基调：${soul.tone}`,
-      soul.relationship && `主角关系与张力：${soul.relationship}`,
-      soul.worldRules && `世界观规则：${soul.worldRules}`,
-      soul.mustNotBreak && `绝对不能崩的地方：${soul.mustNotBreak}`,
-      soul.keywords && `本书关键词：${soul.keywords}`,
-      soul.aiReminder && `创作提醒：${soul.aiReminder}`,
-    ].filter(Boolean);
-    sections.push(`【书籍灵魂】\n${lines.join("\n")}`);
-  }
-
-  // Characters
-  if (characters.length > 0) {
-    const charText = characters.map((c) => {
-      const lines: string[] = [`${c.role ? `[${c.role}] ` : ""}${c.name || "未命名"}`];
-      if (c.alias) lines.push(`  别名：${c.alias}`);
-      if (c.age || c.gender) lines.push(`  ${[c.age && `${c.age}岁`, c.gender].filter(Boolean).join("，")}`);
-      if (c.appearance) lines.push(`  外貌：${c.appearance}`);
-      if (c.personality) lines.push(`  性格：${c.personality}`);
-      if (c.personalityOrigin) lines.push(`  性格成因：${c.personalityOrigin}`);
-      if (c.background) lines.push(`  背景：${c.background}`);
-      if (c.relationships) lines.push(`  关系网：${c.relationships}`);
-      if (c.speechPattern) lines.push(`  说话方式：${c.speechPattern}`);
-      if (c.aiNotes) lines.push(`  ⚠️ 注意：${c.aiNotes}`);
-      return lines.join("\n");
-    }).join("\n\n");
-    sections.push(`【角色档案】\n${charText}`);
-  }
-
-  // Chapter map — all outlines
-  const chapterMap = chapters.map((c, i) => {
-    const wc = c.content.replace(/\s/g, "").length;
-    const isCurrent = c.id === activeChapterId;
-    const header = `第${i + 1}章《${c.title}》（${wc > 0 ? `${wc}字` : "未写"}${isCurrent ? "，✍️ 当前" : ""}）`;
-    return c.outline ? `${header}\n  大纲：${c.outline}` : header;
-  }).join("\n");
-  sections.push(`【全书章节地图】\n${chapterMap}`);
-
-  // Recent chapters full text (up to 2 chapters before current)
-  const currentIdx = chapters.findIndex((c) => c.id === activeChapterId);
-  const recentFull = chapters
-    .slice(Math.max(0, currentIdx - 2), currentIdx)
-    .filter((c) => c.content.trim());
-  if (recentFull.length > 0) {
-    const recentText = recentFull.map((c) => {
-      const idx = chapters.indexOf(c);
-      return `第${idx + 1}章《${c.title}》\n${c.content}`;
-    }).join("\n\n---\n\n");
-    sections.push(`【最近章节正文】\n${recentText}`);
-  }
-
-  // Current chapter
-  const activeCh = chapters.find((c) => c.id === activeChapterId);
-  if (activeCh) {
-    const lines = [`标题：${activeCh.title}`];
-    if (activeCh.outline) lines.push(`本章大纲：${activeCh.outline}`);
-    if (activeCh.content) lines.push(`已有正文：\n${activeCh.content}`);
-    sections.push(`【当前章节】\n${lines.join("\n")}`);
-  }
-
-  // Adult settings
-  if (adultSettings?.enabled) {
-    sections.push(
-      `【成人向创作设置】\n作品分级：${adultSettings.rating}\n` +
-      `关系边界：${adultSettings.relationBoundary}\n描写风格：${adultSettings.writingStyle}`
-    );
-  }
-
-  return sections.join("\n\n");
-}
-
-// ── Component ──────────────────────────────────────────────────────────────
-
-export default function AdvisorPanel({ bookId, bookTitle, chapters, activeChapterId }: Props) {
+export default function AdvisorPanel({
+  bookId,
+  chapters,
+  activeChapterId,
+}: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
+  const [streaming, setStreaming] = useState(false);
   const [modelOptions, setModelOptions] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
-
+  const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const historyKey = `writing-advisor-${bookId}`;
   const modelKey = `writing-advisor-model-${bookId}`;
 
   useEffect(() => {
-    if (!bookId) return;
-    setMessages(safeParse<Message[]>(historyKey, []));
-
-    const ms = safeParse<ModelSettings | null>("ai-model-settings", null);
-    if (ms) {
-      const lines = (ms.modelsText ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
-      const opts = lines.length > 0 ? lines : ms.defaultModel ? [ms.defaultModel] : [];
-      setModelOptions(opts);
-      const saved = localStorage.getItem(modelKey);
-      setSelectedModel(saved || ms.defaultModel || opts[0] || "");
-    }
-  }, [bookId]);
+    try {
+      const raw = localStorage.getItem(historyKey);
+      if (raw) setMessages(JSON.parse(raw));
+    } catch {}
+    try {
+      const raw = localStorage.getItem("ai-model-settings");
+      if (raw) {
+        const ms = JSON.parse(raw);
+        const lines = (ms.modelsText ?? "")
+          .split("\n")
+          .map((l: string) => l.trim())
+          .filter(Boolean);
+        const def = ms.defaultModel?.trim() ?? "";
+        // 默认模型始终排第一，可选模型列表去重追加在后面
+        const opts = def
+          ? [def, ...lines.filter((l) => l !== def)]
+          : lines;
+        setModelOptions(opts);
+        const saved = localStorage.getItem(modelKey);
+        // 优先用上次保存的，但要确保它在列表里
+        setSelectedModel(saved && opts.includes(saved) ? saved : opts[0] ?? "");
+      }
+    } catch {}
+  }, [historyKey, modelKey]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  function handleModelChange(model: string) {
-    setSelectedModel(model);
-    if (bookId) localStorage.setItem(modelKey, model);
+  function saveMessages(msgs: Message[]) {
+    setMessages(msgs);
+    try {
+      localStorage.setItem(historyKey, JSON.stringify(msgs));
+    } catch {}
   }
 
-  function saveHistory(msgs: Message[]) {
-    if (bookId) localStorage.setItem(historyKey, JSON.stringify(msgs));
-  }
-
-  function handleClear() {
-    if (!confirm("清空和军师的对话历史？书的档案不会丢失。")) return;
-    setMessages([]);
-    saveHistory([]);
-  }
-
-  async function handleSend() {
+  async function sendMessage() {
     const text = input.trim();
-    if (!text || isStreaming) return;
-
-    const ms = safeParse<ModelSettings | null>("ai-model-settings", null);
-    if (!ms?.baseUrl || !ms?.apiKey) {
-      const err: Message = { role: "assistant", content: "⚠️ 请先在模型设置中配置 API URL 和密钥。" };
-      setMessages((p) => [...p, err]);
-      return;
-    }
+    if (!text || streaming) return;
+    setInput("");
 
     const userMsg: Message = { role: "user", content: text };
-    const history = [...messages, userMsg];
-    setMessages([...history, { role: "assistant", content: "" }]);
-    setInput("");
-    setIsStreaming(true);
+    const nextMsgs = [...messages, userMsg];
+    saveMessages(nextMsgs);
+    setStreaming(true);
 
-    // Build system prompt fresh (captures latest edits)
-    const systemPrompt = buildAdvisorPrompt({
-      bookTitle,
-      writingDNA: safeParse<WritingDNA>("writing-dna", {}),
-      soul: safeParse<BookSoul[]>("book-souls", []).find((s) => s.bookId === bookId),
-      characters: safeParse<Character[]>("book-characters", []).filter((c) => c.bookId === bookId),
-      chapters,
-      activeChapterId,
-      adultSettings: safeParse<AdultSettings | null>("adult-content-settings", null),
-    });
-
-    abortRef.current = new AbortController();
+    const abort = new AbortController();
+    abortRef.current = abort;
     let accumulated = "";
+    setMessages([...nextMsgs, { role: "assistant", content: "" }]);
 
     try {
-      const res = await fetch(`${ms.baseUrl}/chat/completions`, {
+      const raw = localStorage.getItem("ai-model-settings");
+      const ms = raw ? JSON.parse(raw) : {};
+      const baseUrl =
+        (ms.baseUrl ?? "").replace(/\/$/, "") || "https://api.openai.com";
+      const apiKey = ms.apiKey ?? "";
+      const systemPrompt = buildAdvisorPrompt(bookId, chapters, activeChapterId);
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${ms.apiKey}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        signal: abort.signal,
         body: JSON.stringify({
-          model: selectedModel || ms.defaultModel,
+          model: selectedModel,
+          stream: true,
           messages: [
             { role: "system", content: systemPrompt },
-            ...history.map((m) => ({ role: m.role, content: m.content })),
+            ...nextMsgs.map((m) => ({ role: m.role, content: m.content })),
           ],
-          stream: true,
         }),
-        signal: abortRef.current.signal,
       });
 
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-
-      const reader = res.body!.getReader();
+      const reader = res.body?.getReader();
       const decoder = new TextDecoder();
+      if (!reader) throw new Error("no reader");
 
-      outer: while (true) {
+      while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        for (const line of decoder.decode(value).split("\n")) {
-          if (!line.startsWith("data: ")) continue;
-          const payload = line.slice(6).trim();
-          if (payload === "[DONE]") break outer;
+        const chunk = decoder.decode(value, { stream: true });
+        for (const line of chunk.split("\n")) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const jsonStr = trimmed.slice(5).trim();
+          if (jsonStr === "[DONE]") break;
           try {
-            const t = JSON.parse(payload).choices?.[0]?.delta?.content;
-            if (t) {
-              accumulated += t;
-              setMessages((prev) => [
-                ...prev.slice(0, -1),
+            const parsed = JSON.parse(jsonStr);
+            const delta = parsed.choices?.[0]?.delta?.content ?? "";
+            if (delta) {
+              accumulated += delta;
+              setMessages([
+                ...nextMsgs,
                 { role: "assistant", content: accumulated },
               ]);
             }
           } catch {}
         }
       }
-
-      const final = [...history, { role: "assistant" as const, content: accumulated }];
-      saveHistory(final);
-      setMessages(final);
-    } catch (err) {
-      if (err instanceof Error && err.name !== "AbortError") {
-        const errMsg: Message = { role: "assistant", content: `⚠️ 请求失败：${err.message}` };
-        const final = [...history, errMsg];
-        setMessages(final);
-        saveHistory(final);
+    } catch (e: unknown) {
+      if (e instanceof Error && e.name !== "AbortError") {
+        accumulated = accumulated || "（请求出错，请检查模型设置）";
+        setMessages([...nextMsgs, { role: "assistant", content: accumulated }]);
       }
     } finally {
-      setIsStreaming(false);
+      saveMessages([
+        ...nextMsgs,
+        { role: "assistant", content: accumulated },
+      ]);
+      setStreaming(false);
     }
   }
 
-  return (
-    <div className="flex h-full flex-col bg-[#fffdf8]">
+  function handleClear() {
+    if (!confirm("清空聊天记录？书的档案不会丢失。")) return;
+    saveMessages([]);
+  }
 
-      {/* Header */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-[#e0c9a5] px-4 py-2">
-        <span className="text-sm font-medium text-[#4f3524]">🎯 写作军师</span>
-        <span className="text-xs text-[#c7a984]">— 聊剧情、谋结构、出主意</span>
-        <div className="ml-auto flex items-center gap-2">
+  return (
+    <div className="flex h-full flex-col bg-[#fffaf0]">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between border-b border-[#e0c9a5] px-4 py-2">
+        <span className="text-sm font-medium text-[#9b744d]">🎯 写作军师</span>
+        <div className="flex items-center gap-3">
           {modelOptions.length > 0 && (
-            <select value={selectedModel} onChange={(e) => handleModelChange(e.target.value)}
-              className="rounded-lg border border-[#e0c9a5] bg-[#fff8eb] px-2 py-1 text-xs text-[#4f3524] outline-none">
-              {modelOptions.map((m) => <option key={m} value={m}>{m}</option>)}
+            <select
+              value={selectedModel}
+              onChange={(e) => {
+                setSelectedModel(e.target.value);
+                try {
+                  localStorage.setItem(modelKey, e.target.value);
+                } catch {}
+              }}
+              className="rounded-lg border border-[#e0c9a5] bg-[#fff8eb] px-2 py-1 text-xs text-[#4f3524] outline-none"
+            >
+              {modelOptions.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
             </select>
           )}
-          <button onClick={handleClear}
-            className="rounded-lg px-2 py-1 text-xs text-[#c7a984] transition hover:text-[#9b744d]">
-            清空对话
+          <button
+            onClick={handleClear}
+            className="text-xs text-[#c7a984] transition hover:text-[#9b744d]"
+          >
+            清空
           </button>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
         {messages.length === 0 && (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-center text-sm leading-8 text-[#c7a984]">
-              军师已就位，随时准备好了。<br />
-              可以问剧情走向、人物动机、结构问题——什么都行。
-            </p>
-          </div>
+          <p className="pt-4 text-center text-sm text-[#c7a984]">
+            有什么剧情想聊？军师随时在线。
+          </p>
         )}
-        {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-7 ${
-              msg.role === "user"
-                ? "rounded-br-sm bg-[#6e4b2d] text-amber-50"
-                : "rounded-bl-sm border border-[#e0c9a5] bg-white text-[#4f3524] shadow-sm"
-            }`}>
-              <span className="whitespace-pre-wrap">{msg.content}</span>
-              {isStreaming && i === messages.length - 1 && (
-                <span className="animate-pulse text-[#9b744d]">▋</span>
-              )}
+        {messages.map((m, i) => (
+          <div
+            key={i}
+            className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+          >
+            <div
+              className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-6 ${
+                m.role === "user"
+                  ? "bg-[#6e4b2d] text-amber-50"
+                  : "border border-[#e0c9a5] bg-white text-[#4f3524]"
+              }`}
+            >
+              {m.content ||
+                (streaming && i === messages.length - 1 ? "▍" : "")}
             </div>
           </div>
         ))}
@@ -369,24 +343,27 @@ export default function AdvisorPanel({ bookId, bookTitle, chapters, activeChapte
       </div>
 
       {/* Input */}
-      <div className="shrink-0 border-t border-[#e0c9a5] bg-[#fff8eb]/80 p-3">
-        <div className="flex items-end gap-2">
+      <div className="border-t border-[#e0c9a5] p-3">
+        <div className="flex items-end gap-2 rounded-2xl border border-[#e0c9a5] bg-white px-4 py-2">
           <textarea
+            rows={2}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-            placeholder="问军师点什么……（Enter 发送，Shift+Enter 换行）"
-            rows={2}
-            className="flex-1 resize-none rounded-xl border border-[#e0c9a5] bg-white px-4 py-2.5 text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#c7a984] focus:border-[#9b744d] transition"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            placeholder="跟军师说…（Enter 发送，Shift+Enter 换行）"
+            className="flex-1 resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
           />
           <button
-            onClick={isStreaming ? () => abortRef.current?.abort() : handleSend}
-            disabled={!input.trim() && !isStreaming}
-            className={`shrink-0 rounded-xl px-4 py-2.5 text-sm text-amber-50 transition ${
-              isStreaming ? "bg-[#9b744d]" : "bg-[#6e4b2d] hover:bg-[#58391f] disabled:opacity-40"
-            }`}
+            onClick={sendMessage}
+            disabled={streaming}
+            className="shrink-0 rounded-full bg-[#6e4b2d] px-4 py-1.5 text-xs text-amber-50 transition hover:bg-[#58391f] disabled:opacity-50"
           >
-            {isStreaming ? "停" : "发"}
+            {streaming ? "…" : "发送"}
           </button>
         </div>
       </div>
