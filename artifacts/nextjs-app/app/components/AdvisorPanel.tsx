@@ -283,10 +283,10 @@ export default function AdvisorPanel({
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#fffaf0]">
+    <div className="flex h-full flex-col bg-[#1e1008]">
       {/* Toolbar */}
-      <div className="flex items-center justify-between border-b border-[#e0c9a5] px-4 py-2">
-        <span className="text-sm font-medium text-[#9b744d]">🎯 写作军师</span>
+      <div className="flex items-center justify-between border-b border-[#3a2010] px-4 py-2">
+        <span className="text-sm font-medium text-[#d4a05a]">写作军师</span>
         <div className="flex items-center gap-3">
           {modelOptions.length > 0 && (
             <select
@@ -297,7 +297,7 @@ export default function AdvisorPanel({
                   localStorage.setItem(modelKey, e.target.value);
                 } catch {}
               }}
-              className="rounded-lg border border-[#e0c9a5] bg-[#fff8eb] px-2 py-1 text-xs text-[#4f3524] outline-none"
+              className="rounded-lg border border-[#5a3518] bg-[#281405] px-2 py-1 text-xs text-[#c8a878] outline-none"
             >
               {modelOptions.map((m) => (
                 <option key={m} value={m}>
@@ -308,7 +308,7 @@ export default function AdvisorPanel({
           )}
           <button
             onClick={handleClear}
-            className="text-xs text-[#c7a984] transition hover:text-[#9b744d]"
+            className="text-xs text-[#8a6040] transition hover:text-[#c8a878]"
           >
             清空
           </button>
@@ -318,7 +318,7 @@ export default function AdvisorPanel({
       {/* Messages */}
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
         {messages.length === 0 && (
-          <p className="pt-4 text-center text-sm text-[#c7a984]">
+          <p className="pt-4 text-center text-sm text-[#8a6040]">
             有什么剧情想聊？军师随时在线。
           </p>
         )}
@@ -331,7 +331,7 @@ export default function AdvisorPanel({
               className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-6 ${
                 m.role === "user"
                   ? "bg-[#6e4b2d] text-amber-50"
-                  : "border border-[#e0c9a5] bg-white text-[#4f3524]"
+                  : "border border-[#3a2010] bg-[#281405] text-[#f0e6d3]"
               }`}
             >
               {m.content ||
@@ -343,8 +343,8 @@ export default function AdvisorPanel({
       </div>
 
       {/* Input */}
-      <div className="border-t border-[#e0c9a5] p-3">
-        <div className="flex items-end gap-2 rounded-2xl border border-[#e0c9a5] bg-white px-4 py-2">
+      <div className="border-t border-[#3a2010] p-3">
+        <div className="flex items-end gap-2 rounded-2xl border border-[#5a3518] bg-[#281405] px-4 py-2">
           <textarea
             rows={2}
             value={input}
@@ -356,7 +356,7 @@ export default function AdvisorPanel({
               }
             }}
             placeholder="跟军师说…（Enter 发送，Shift+Enter 换行）"
-            className="flex-1 resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
+            className="flex-1 resize-none bg-transparent text-sm leading-6 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
           />
           <button
             onClick={sendMessage}
