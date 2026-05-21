@@ -1,6 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
 
-// Items positioned over desk objects — tweak top/left if image crop differs
 const DESK_LINKS = [
   {
     label: "我的作品",
@@ -14,42 +14,42 @@ const DESK_LINKS = [
     label: "日历",
     href: "/calendar",
     top: "24%",
-    left: "56%",
+    left: "60%",
     translate: "-50%, -50%",
   },
   {
     label: "成绩",
     href: "/stats",
     top: "33%",
-    left: "83%",
+    left: "87%",
     translate: "-50%, -50%",
   },
   {
     label: "写作",
     href: "/write",
     top: "62%",
-    left: "46%",
+    left: "50%",
     translate: "-50%, -50%",
   },
   {
     label: "对话炼字",
     href: "/transform",
     top: "63%",
-    left: "80%",
+    left: "84%",
     translate: "-50%, -50%",
   },
   {
     label: "灵感",
     href: "/inspirations",
     top: "76%",
-    left: "13%",
+    left: "17%",
     translate: "-50%, -50%",
   },
   {
     label: "读者来信",
     href: "/readers",
     top: "83%",
-    left: "79%",
+    left: "83%",
     translate: "-50%, -50%",
   },
 ];
@@ -65,7 +65,6 @@ export default function Home() {
     <main className="min-h-screen bg-[#1a0f08] text-[#f0e6d3]">
       <div className="mx-auto flex max-w-2xl flex-col items-center px-4 py-8">
 
-        {/* Header */}
         <header className="mb-6 text-center">
           <p className="text-xs tracking-[0.25em] text-[#9b744d]">
             SHENGSHENG WRITING ROOM
@@ -75,17 +74,16 @@ export default function Home() {
           </h1>
         </header>
 
-        {/* Desk */}
         <div className="relative w-full overflow-hidden rounded-2xl shadow-2xl">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/desk.png"
             alt="书桌"
+            width={1090}
+            height={1090}
             className="w-full select-none"
-            draggable={false}
+            priority
           />
 
-          {/* Overlay links */}
           {DESK_LINKS.map(({ label, href, top, left, translate, wide }) => (
             <Link
               key={label}
@@ -104,7 +102,6 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Settings row */}
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           {SETTINGS_LINKS.map(({ label, href }) => (
             <Link
