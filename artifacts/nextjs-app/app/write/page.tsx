@@ -447,28 +447,28 @@ export default function WritePage() {
   // ── Render ────────────────────────────────────────────────────────────
 
   return (
-    <main className="flex h-[100dvh] flex-col bg-[#f8f0df] text-[#4f3524]">
+    <main className="flex h-[100dvh] flex-col bg-[#140c05] text-[#f0e6d3]">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-[#e0c9a5] bg-[#fff8eb]/90 px-8 py-4 shadow-sm">
+      <header className="flex items-center justify-between border-b border-[#3a2010] bg-[#1e1008]/90 px-8 py-4 shadow-sm">
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="rounded-full border border-[#d8b98f] px-4 py-1.5 text-sm text-[#8a6a4d] transition hover:bg-white"
+            className="rounded-full border border-[#5a3518] px-4 py-1.5 text-sm text-[#c8a878] transition hover:bg-[#281405]"
           >
             ← 回到小屋
           </Link>
 
           <div className="flex items-center gap-2">
             {activeBook && (
-              <span className="text-sm text-[#a37a50]">{activeBook.title}</span>
+              <span className="text-sm text-[#c8a878]">{activeBook.title}</span>
             )}
-            {activeBook && <span className="text-[#d8b98f]">/</span>}
+            {activeBook && <span className="text-[#5a3518]">/</span>}
             <input
               type="text"
               value={activeChapter?.title ?? ""}
               onChange={(e) => updateActiveChapter({ title: e.target.value })}
               placeholder="章节标题"
-              className="w-56 bg-transparent text-xl font-semibold text-[#4f3524] outline-none placeholder:text-[#c7a984]"
+              className="w-56 bg-transparent text-xl font-semibold text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
             />
           </div>
         </div>
@@ -478,8 +478,8 @@ export default function WritePage() {
             <span
               className={`text-sm transition-opacity ${
                 saveStatus === "saving"
-                  ? "animate-pulse text-[#c4a05a]"
-                  : "text-[#9b744d]"
+                  ? "animate-pulse text-[#d4a05a]"
+                  : "text-[#c8a878]"
               }`}
             >
               {statusLabel()}
@@ -497,113 +497,88 @@ export default function WritePage() {
       {/* ── Mobile tab content ─────────────────────────────────────── */}
       <div className="flex flex-1 flex-col overflow-hidden md:hidden">
         <div className="flex-1 overflow-hidden">
-
-          {/* 写作 tab */}
           {mobileTab === "write" && (
             <div className="flex h-full flex-col overflow-hidden">
               <div className="flex-1 overflow-auto px-4 py-6">
-                <textarea
-                  value={content}
-                  onChange={(e) => updateActiveChapter({ content: e.target.value })}
-                  className="min-h-[55vh] w-full resize-none bg-transparent text-base leading-8 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
-                  placeholder="从这里开始写吧……"
-                />
+                <textarea value={content} onChange={(e) => updateActiveChapter({ content: e.target.value })}
+                  className="min-h-[55vh] w-full resize-none bg-transparent text-base leading-8 text-[#e8d5b7] outline-none placeholder:text-[#5a3820]"
+                  placeholder="从这里开始写吧……" />
               </div>
-              <div className="flex justify-center border-t border-[#e0c9a5] bg-[#fff8eb]/60 py-2">
-                <button
-                  onClick={() => setMobileTab("advisor")}
-                  className="rounded-full border border-[#d8b98f] bg-[#fff8eb] px-5 py-1.5 text-sm text-[#6e4b2d] shadow-sm"
-                >
+              <div className="flex justify-center border-t border-[#3a2010] bg-[#1e1008]/60 py-2">
+                <button onClick={() => setMobileTab("advisor")}
+                  className="rounded-full border border-[#5a3518] bg-[#281405] px-5 py-1.5 text-sm text-[#d4a05a] shadow-sm">
                   🎯 问军师
                 </button>
               </div>
             </div>
           )}
-
-          {/* 章节 tab */}
           {mobileTab === "chapters" && (
             <div className="flex h-full flex-col p-4">
               <div className="flex-1 space-y-2 overflow-y-auto">
                 {bookChapters.map((ch) => (
-                  <button
-                    key={ch.id}
-                    onClick={() => { handleSwitchChapter(ch.id); setMobileTab("write"); }}
-                    className={`w-full rounded-xl px-4 py-3 text-left text-sm transition ${
-                      ch.id === activeChapterId ? "bg-white text-[#4f3524] shadow-sm" : "text-[#9b744d] hover:bg-white/70"
-                    }`}
-                  >
+                  <button key={ch.id} onClick={() => { handleSwitchChapter(ch.id); setMobileTab("write"); }}
+                    className={`w-full rounded-xl px-4 py-3 text-left text-sm transition ${ch.id === activeChapterId ? "bg-[#3a2010] text-[#f0e6d3] shadow-sm" : "text-[#c8a878] hover:bg-[#281405]"}`}>
                     <span className="block font-medium">{ch.title || "未命名章节"}</span>
-                    <span className="mt-0.5 block text-xs text-[#c7a984]">{ch.content.replace(/\s/g, "").length} 字</span>
+                    <span className="mt-0.5 block text-xs text-[#8a6040]">{ch.content.replace(/\s/g, "").length} 字</span>
                   </button>
                 ))}
               </div>
-              <button
-                onClick={() => { handleAddChapter(); setMobileTab("write"); }}
-                className="mt-3 w-full rounded-xl border border-dashed border-[#d8b98f] px-4 py-2.5 text-sm text-[#9b744d]"
-              >
+              <button onClick={() => { handleAddChapter(); setMobileTab("write"); }}
+                className="mt-3 w-full rounded-xl border border-dashed border-[#5a3518] px-4 py-2.5 text-sm text-[#c8a878]">
                 + 新章节
               </button>
-              <Link
-                href={`/book-soul?bookId=${activeBookId}`}
-                className="mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#9b744d]"
-              >
+              <Link href={`/book-soul?bookId=${activeBookId}`}
+                className="mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#c8a878]">
                 <span>🪬</span><span>书籍灵魂卡</span>
               </Link>
             </div>
           )}
-
-          {/* 工具 tab */}
           {mobileTab === "tools" && (
             <div className="h-full overflow-y-auto p-4 space-y-4">
-              {/* 速记灵感 */}
-              <div className="rounded-2xl border border-[#d7bd83] bg-[#fff2b8] p-4">
-                <p className="mb-2 text-xs font-medium text-[#9b744d]">速记灵感</p>
-                <textarea
-                  value={quickNote}
-                  onChange={(e) => setQuickNote(e.target.value)}
-                  className="min-h-20 w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#a8874f]"
-                  placeholder="突然想到的台词、伏笔……先丢这里。"
-                />
+              <div className="rounded-2xl border border-[#5a4010] bg-[#1e1500] p-4">
+                <p className="mb-2 text-xs font-medium text-[#c8a878]">速记灵感</p>
+                <textarea value={quickNote} onChange={(e) => setQuickNote(e.target.value)}
+                  className="min-h-20 w-full resize-none bg-transparent text-sm leading-6 text-[#e8d5b7] outline-none placeholder:text-[#5a3820]"
+                  placeholder="突然想到的台词、伏笔……先丢这里。" />
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="text-xs text-[#9b744d]">{quickNote.trim().length} 字</span>
+                  <span className="text-xs text-[#8a6040]">{quickNote.trim().length} 字</span>
                   <button onClick={saveQuickNote} className="rounded-full bg-[#6e4b2d] px-4 py-1.5 text-xs text-amber-50">贴到灵感墙</button>
                 </div>
-                {noteSavedMessage && <p className="mt-2 text-xs text-[#7c5a2d]">{noteSavedMessage}</p>}
+                {noteSavedMessage && <p className="mt-2 text-xs text-[#c8a878]">{noteSavedMessage}</p>}
               </div>
-              {/* 大纲 + 指令 */}
-              <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
-                <label className="mb-2 block text-xs font-medium text-[#9b744d]">本章大纲</label>
+              <div className="rounded-2xl border border-[#3a2010] bg-[#281405] p-4">
+                <label className="mb-2 block text-xs font-medium text-[#c8a878]">本章大纲</label>
                 <textarea rows={3} value={activeChapter?.outline ?? ""} onChange={(e) => updateActiveChapter({ outline: e.target.value })}
-                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
+                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
                   placeholder="这一章要写什么？" />
               </div>
-              <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
-                <label className="mb-2 block text-xs font-medium text-[#9b744d]">本次指令</label>
+              <div className="rounded-2xl border border-[#3a2010] bg-[#281405] p-4">
+                <label className="mb-2 block text-xs font-medium text-[#c8a878]">本次指令</label>
                 <textarea rows={2} value={activeChapter?.aiInstruction ?? ""} onChange={(e) => updateActiveChapter({ aiInstruction: e.target.value })}
-                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
+                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
                   placeholder="对 AI 的特别要求……" />
               </div>
               {modelOptions.length > 0 && (
-                <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
-                  <label className="mb-2 block text-xs font-medium text-[#9b744d]">本次模型</label>
+                <div className="rounded-2xl border border-[#3a2010] bg-[#281405] p-4">
+                  <label className="mb-2 block text-xs font-medium text-[#c8a878]">本次模型</label>
                   <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}
-                    className="w-full rounded-xl border border-[#e0c9a5] bg-[#fff8eb] px-3 py-2 text-sm text-[#4f3524] outline-none">
+                    className="w-full rounded-xl border border-[#3a2010] bg-[#1e1008] px-3 py-2 text-sm text-[#f0e6d3] outline-none">
                     {modelOptions.map((m) => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
               )}
               <button onClick={handleAIWrite}
-                className={`w-full rounded-xl px-4 py-3 text-sm text-amber-50 transition ${aiStreaming ? "bg-[#9b744d]" : "bg-[#6e4b2d]"}`}>
+                className={`w-full rounded-xl px-4 py-3 text-sm text-amber-50 transition ${aiStreaming ? "bg-[#5a3518]" : "bg-[#6e4b2d]"}`}>
                 {aiStreaming ? "⏹ 停止生成" : "✍️ AI 扩写"}
               </button>
               {aiDraft && (
-                <div className="rounded-2xl border border-[#e0c9a5] bg-[#fffaf0] p-4">
+                <div className="rounded-2xl border border-[#3a2010] bg-[#1e1008] p-4">
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-xs font-medium text-[#9b744d]">草稿 · {aiDraft.replace(/\s/g, "").length} 字</span>
-                    <button onClick={() => setAiDraft("")} className="text-xs text-[#c7a984]">清空</button>
+                    <span className="text-xs font-medium text-[#c8a878]">草稿 · {aiDraft.replace(/\s/g, "").length} 字</span>
+                    <button onClick={() => setAiDraft("")} className="text-xs text-[#8a6040]">清空</button>
                   </div>
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-[#4f3524]">
-                    {aiDraft}{aiStreaming && <span className="animate-pulse text-[#9b744d]">▍</span>}
+                  <p className="whitespace-pre-wrap text-sm leading-7 text-[#e8d5b7]">
+                    {aiDraft}{aiStreaming && <span className="animate-pulse text-[#c8a878]">▍</span>}
                   </p>
                   {!aiStreaming && (
                     <button onClick={handleAppendDraft} className="mt-3 w-full rounded-xl bg-[#6e4b2d] px-4 py-2 text-xs text-amber-50">追加到正文 →</button>
@@ -612,25 +587,19 @@ export default function WritePage() {
               )}
             </div>
           )}
-
-          {/* 军师 tab */}
           {mobileTab === "advisor" && (
             <div className="h-full">
               <AdvisorPanel bookId={activeBookId} chapters={bookChapters} activeChapterId={activeChapterId} />
             </div>
           )}
         </div>
-
-        {/* Bottom tab bar */}
-        <nav className="flex shrink-0 border-t border-[#e0c9a5] bg-[#fff8eb]/95">
+        <nav className="flex shrink-0 border-t border-[#3a2010] bg-[#1e1008]/95">
           {(["write", "chapters", "tools", "advisor"] as const).map((tab) => {
             const items = { write: ["✍️", "写作"], chapters: ["📑", "章节"], tools: ["🔧", "工具"], advisor: ["🎯", "军师"] };
             const [icon, label] = items[tab];
             return (
               <button key={tab} onClick={() => setMobileTab(tab)}
-                className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs transition ${
-                  mobileTab === tab ? "text-[#6e4b2d]" : "text-[#c7a984]"
-                }`}>
+                className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs transition ${mobileTab === tab ? "text-[#d4a05a]" : "text-[#5a3820]"}`}>
                 <span className="text-lg">{icon}</span>
                 <span>{label}</span>
               </button>
@@ -641,208 +610,114 @@ export default function WritePage() {
 
       {/* ── Desktop 3-column layout ─────────────────────────────────── */}
       <div className="hidden flex-1 md:grid md:grid-cols-[220px_1fr_280px] md:overflow-hidden">
-        {/* Left sidebar — chapters */}
-        <aside className="flex flex-col border-r border-[#e0c9a5] bg-[#fff8eb]/70 p-5">
-          <p className="mb-4 text-sm font-medium text-[#9b744d]">章节</p>
-
+        {/* Left sidebar */}
+        <aside className="flex flex-col border-r border-[#3a2010] bg-[#1e1008] p-5">
+          <p className="mb-4 text-sm font-medium text-[#c8a878]">章节</p>
           <div className="flex-1 space-y-1.5 overflow-y-auto">
             {bookChapters.map((ch) => (
-              <button
-                key={ch.id}
-                onClick={() => handleSwitchChapter(ch.id)}
-                className={`w-full rounded-xl px-4 py-3 text-left text-sm transition ${
-                  ch.id === activeChapterId
-                    ? "bg-white text-[#4f3524] shadow-sm"
-                    : "text-[#9b744d] hover:bg-white/70"
-                }`}
-              >
-                <span className="block truncate">
-                  {ch.title || "未命名章节"}
-                </span>
-                <span className="mt-0.5 block text-xs text-[#c7a984]">
-                  {ch.content.replace(/\s/g, "").length} 字
-                </span>
+              <button key={ch.id} onClick={() => handleSwitchChapter(ch.id)}
+                className={`w-full rounded-xl px-4 py-3 text-left text-sm transition ${ch.id === activeChapterId ? "bg-[#3a2010] text-[#f0e6d3] shadow-sm" : "text-[#c8a878] hover:bg-[#281405]"}`}>
+                <span className="block truncate">{ch.title || "未命名章节"}</span>
+                <span className="mt-0.5 block text-xs text-[#8a6040]">{ch.content.replace(/\s/g, "").length} 字</span>
               </button>
             ))}
           </div>
-
-          <button
-            onClick={handleAddChapter}
-            className="mt-4 w-full rounded-xl border border-dashed border-[#d8b98f] px-4 py-2.5 text-sm text-[#9b744d] transition hover:bg-white/70"
-          >
+          <button onClick={handleAddChapter}
+            className="mt-4 w-full rounded-xl border border-dashed border-[#5a3518] px-4 py-2.5 text-sm text-[#c8a878] transition hover:bg-[#281405]">
             + 新章节
           </button>
-
-          <Link
-            href={`/book-soul?bookId=${activeBookId}`}
-            className="mt-2 flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#9b744d] transition hover:bg-white/70"
-          >
-            <span>🪬</span>
-            <span>书籍灵魂卡</span>
+          <Link href={`/book-soul?bookId=${activeBookId}`}
+            className="mt-2 flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#c8a878] transition hover:bg-[#281405]">
+            <span>🪬</span><span>书籍灵魂卡</span>
           </Link>
         </aside>
 
-        {/* Main editor + advisor */}
+        {/* Main editor */}
         <section className="flex flex-col overflow-hidden">
           <div className="flex-1 overflow-auto px-12 py-10">
-            <div className="mx-auto max-w-3xl rounded-[1.5rem] border border-[#ead8b8] bg-[#fffaf0] p-8 shadow-sm">
-              <textarea
-                value={content}
-                onChange={(e) =>
-                  updateActiveChapter({ content: e.target.value })
-                }
-                className="min-h-[60vh] w-full resize-none bg-transparent text-lg leading-9 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
-                placeholder="从这里开始写吧。可以是一句话，一个场景，或者今天突然亮起来的那一幕……"
-              />
+            <div className="mx-auto max-w-3xl rounded-[1.5rem] border border-[#3a2010] bg-[#1e1008] p-8 shadow-sm">
+              <textarea value={content} onChange={(e) => updateActiveChapter({ content: e.target.value })}
+                className="min-h-[60vh] w-full resize-none bg-transparent text-lg leading-9 text-[#e8d5b7] outline-none placeholder:text-[#5a3820]"
+                placeholder="从这里开始写吧。可以是一句话，一个场景，或者今天突然亮起来的那一幕……" />
             </div>
           </div>
-
-          {/* Advisor toggle */}
-          <div className="flex justify-center border-t border-[#e0c9a5] bg-[#fff8eb]/60 py-2">
-            <button
-              onClick={() => setAdvisorOpen((o) => !o)}
-              className="rounded-full border border-[#d8b98f] bg-[#fff8eb] px-6 py-1.5 text-sm text-[#6e4b2d] shadow-sm transition hover:bg-white"
-            >
+          <div className="flex justify-center border-t border-[#3a2010] bg-[#1e1008]/60 py-2">
+            <button onClick={() => setAdvisorOpen((o) => !o)}
+              className="rounded-full border border-[#5a3518] bg-[#281405] px-6 py-1.5 text-sm text-[#d4a05a] shadow-sm transition hover:bg-[#3a2010]">
               {advisorOpen ? "收起军师 ↓" : "🎯 写作军师 ↑"}
             </button>
           </div>
-
           {advisorOpen && (
-            <div className="h-96 shrink-0 border-t border-[#e0c9a5]">
-              <AdvisorPanel
-                bookId={activeBookId}
-                chapters={bookChapters}
-                activeChapterId={activeChapterId}
-              />
+            <div className="h-96 shrink-0 border-t border-[#3a2010]">
+              <AdvisorPanel bookId={activeBookId} chapters={bookChapters} activeChapterId={activeChapterId} />
             </div>
           )}
         </section>
 
         {/* Right sidebar */}
-        <aside className="flex flex-col gap-5 overflow-y-auto border-l border-[#e0c9a5] bg-[#fff8eb]/70 p-5">
+        <aside className="flex flex-col gap-5 overflow-y-auto border-l border-[#3a2010] bg-[#1e1008] p-5">
           <section>
-            <p className="mb-4 text-sm font-medium text-[#9b744d]">速记灵感</p>
-            <div className="rounded-2xl border border-[#d7bd83] bg-[#fff2b8] p-4 shadow-sm">
-              <textarea
-                value={quickNote}
-                onChange={(e) => setQuickNote(e.target.value)}
-                className="min-h-24 w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#a8874f]"
-                placeholder="突然想到的台词、伏笔、梗、画面……先丢这里。"
-              />
+            <p className="mb-4 text-sm font-medium text-[#c8a878]">速记灵感</p>
+            <div className="rounded-2xl border border-[#5a4010] bg-[#1e1500] p-4 shadow-sm">
+              <textarea value={quickNote} onChange={(e) => setQuickNote(e.target.value)}
+                className="min-h-24 w-full resize-none bg-transparent text-sm leading-6 text-[#e8d5b7] outline-none placeholder:text-[#5a3820]"
+                placeholder="突然想到的台词、伏笔、梗、画面……先丢这里。" />
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-xs text-[#9b744d]">
-                  {quickNote.trim().length} 字
-                </span>
-                <button
-                  onClick={saveQuickNote}
-                  className="rounded-full bg-[#6e4b2d] px-4 py-1.5 text-xs text-amber-50 transition hover:bg-[#58391f]"
-                >
+                <span className="text-xs text-[#8a6040]">{quickNote.trim().length} 字</span>
+                <button onClick={saveQuickNote}
+                  className="rounded-full bg-[#6e4b2d] px-4 py-1.5 text-xs text-amber-50 transition hover:bg-[#58391f]">
                   贴到灵感墙
                 </button>
               </div>
-              {noteSavedMessage && (
-                <p className="mt-3 text-xs text-[#7c5a2d]">
-                  {noteSavedMessage}
-                </p>
-              )}
+              {noteSavedMessage && <p className="mt-3 text-xs text-[#c8a878]">{noteSavedMessage}</p>}
             </div>
-            <Link
-              href="/inspirations"
-              className="mt-3 inline-block text-xs text-[#9b744d] underline underline-offset-4"
-            >
+            <Link href="/inspirations" className="mt-3 inline-block text-xs text-[#8a6040] underline underline-offset-4">
               查看全部灵感 →
             </Link>
           </section>
 
           <section>
-            <p className="mb-4 text-sm font-medium text-[#9b744d]">
-              AI 扩写准备
-            </p>
-
+            <p className="mb-4 text-sm font-medium text-[#c8a878]">AI 扩写准备</p>
             <div className="space-y-3">
-              <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
-                <label className="mb-2 block text-xs font-medium text-[#9b744d]">
-                  本章大纲
-                </label>
-                <textarea
-                  rows={4}
-                  value={activeChapter?.outline ?? ""}
-                  onChange={(e) =>
-                    updateActiveChapter({ outline: e.target.value })
-                  }
-                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
-                  placeholder="这一章要写什么？几个关键节拍或场景……"
-                />
+              <div className="rounded-2xl border border-[#3a2010] bg-[#281405] p-4">
+                <label className="mb-2 block text-xs font-medium text-[#c8a878]">本章大纲</label>
+                <textarea rows={4} value={activeChapter?.outline ?? ""} onChange={(e) => updateActiveChapter({ outline: e.target.value })}
+                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
+                  placeholder="这一章要写什么？几个关键节拍或场景……" />
               </div>
-
-              <div className="rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
-                <label className="mb-2 block text-xs font-medium text-[#9b744d]">
-                  本次指令
-                </label>
-                <textarea
-                  rows={3}
-                  value={activeChapter?.aiInstruction ?? ""}
-                  onChange={(e) =>
-                    updateActiveChapter({ aiInstruction: e.target.value })
-                  }
-                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
-                  placeholder="对 AI 的特别要求，比如：重点写眼神交流，不要推进剧情……"
-                />
+              <div className="rounded-2xl border border-[#3a2010] bg-[#281405] p-4">
+                <label className="mb-2 block text-xs font-medium text-[#c8a878]">本次指令</label>
+                <textarea rows={3} value={activeChapter?.aiInstruction ?? ""} onChange={(e) => updateActiveChapter({ aiInstruction: e.target.value })}
+                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
+                  placeholder="对 AI 的特别要求，比如：重点写眼神交流，不要推进剧情……" />
               </div>
             </div>
-
             {modelOptions.length > 0 && (
-              <div className="mt-3 rounded-2xl border border-[#e0c9a5] bg-white/70 p-4">
-                <label className="mb-2 block text-xs font-medium text-[#9b744d]">
-                  本次模型
-                </label>
-                <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  className="w-full rounded-xl border border-[#e0c9a5] bg-[#fff8eb] px-3 py-2 text-sm text-[#4f3524] outline-none"
-                >
-                  {modelOptions.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
+              <div className="mt-3 rounded-2xl border border-[#3a2010] bg-[#281405] p-4">
+                <label className="mb-2 block text-xs font-medium text-[#c8a878]">本次模型</label>
+                <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}
+                  className="w-full rounded-xl border border-[#3a2010] bg-[#1e1008] px-3 py-2 text-sm text-[#f0e6d3] outline-none">
+                  {modelOptions.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
             )}
-
-            <button
-              onClick={handleAIWrite}
-              className={`mt-4 w-full rounded-xl px-4 py-3 text-sm text-amber-50 transition ${
-                aiStreaming
-                  ? "bg-[#9b744d] hover:bg-[#7a5c38]"
-                  : "bg-[#6e4b2d] hover:bg-[#58391f]"
-              }`}
-            >
+            <button onClick={handleAIWrite}
+              className={`mt-4 w-full rounded-xl px-4 py-3 text-sm text-amber-50 transition ${aiStreaming ? "bg-[#5a3518] hover:bg-[#3a2010]" : "bg-[#6e4b2d] hover:bg-[#58391f]"}`}>
               {aiStreaming ? "⏹ 停止生成" : "✍️ AI 扩写"}
             </button>
-
             {aiDraft && (
-              <div className="mt-3 rounded-2xl border border-[#e0c9a5] bg-[#fffaf0] p-4">
+              <div className="mt-3 rounded-2xl border border-[#3a2010] bg-[#1e1008] p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-[#9b744d]">
-                    草稿 · {aiDraft.replace(/\s/g, "").length} 字
-                  </span>
-                  <button
-                    onClick={() => setAiDraft("")}
-                    className="text-xs text-[#c7a984] hover:text-[#9b744d] transition"
-                  >
-                    清空
-                  </button>
+                  <span className="text-xs font-medium text-[#c8a878]">草稿 · {aiDraft.replace(/\s/g, "").length} 字</span>
+                  <button onClick={() => setAiDraft("")} className="text-xs text-[#8a6040] hover:text-[#c8a878] transition">清空</button>
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-7 text-[#4f3524]">
+                <p className="whitespace-pre-wrap text-sm leading-7 text-[#e8d5b7]">
                   {aiDraft}
-                  {aiStreaming && <span className="animate-pulse text-[#9b744d]">▍</span>}
+                  {aiStreaming && <span className="animate-pulse text-[#c8a878]">▍</span>}
                 </p>
                 {!aiStreaming && (
-                  <button
-                    onClick={handleAppendDraft}
-                    className="mt-3 w-full rounded-xl bg-[#6e4b2d] px-4 py-2 text-xs text-amber-50 transition hover:bg-[#58391f]"
-                  >
+                  <button onClick={handleAppendDraft}
+                    className="mt-3 w-full rounded-xl bg-[#6e4b2d] px-4 py-2 text-xs text-amber-50 transition hover:bg-[#58391f]">
                     追加到正文 →
                   </button>
                 )}
@@ -853,13 +728,11 @@ export default function WritePage() {
       </div>
 
       {/* Footer — desktop only */}
-      <footer className="hidden items-center gap-6 border-t border-[#e0c9a5] bg-[#fff8eb]/90 px-8 py-3 text-xs text-[#9b744d] md:flex">
+      <footer className="hidden items-center gap-6 border-t border-[#3a2010] bg-[#1e1008]/90 px-8 py-3 text-xs text-[#c8a878] md:flex">
         <span>{wordCount} 字</span>
         <span>{characterCount} 字符</span>
         <span>{paragraphCount} 段</span>
-        <span className="ml-auto text-[#c7a984]">
-          共 {bookChapters.length} 章
-        </span>
+        <span className="ml-auto text-[#8a6040]">共 {bookChapters.length} 章</span>
       </footer>
     </main>
   );
