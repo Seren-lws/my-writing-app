@@ -105,10 +105,10 @@ export default function TransformPage() {
           .split("\n")
           .map((l: string) => l.trim())
           .filter(Boolean);
-        const opts =
-          lines.length > 0 ? lines : ms.defaultModel ? [ms.defaultModel] : [];
+        const def = ms.defaultModel?.trim() ?? "";
+        const opts = def ? [def, ...lines.filter((l: string) => l !== def)] : lines;
         setModelOptions(opts);
-        setSelectedModel(ms.defaultModel ?? opts[0] ?? "");
+        setSelectedModel(opts[0] ?? "");
       }
     } catch {}
   }, []);
