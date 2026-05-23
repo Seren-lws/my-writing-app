@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import PageHeader from "../components/PageHeader";
 
 type AdultSettings = {
   enabled: boolean;
@@ -37,35 +37,38 @@ export default function AdultSettingsPage() {
     setSavedAt(new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }));
   }
 
-  const textareaClass = "w-full resize-none bg-transparent text-sm leading-7 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]";
-  const cardClass = "rounded-2xl border border-[#4c2c14] bg-[#261609] p-6 shadow-sm";
-  const labelClass = "block text-sm font-medium text-[#d4a05a]";
+  const textareaClass = "w-full resize-none bg-transparent text-sm leading-7 text-[#3d2b1a] outline-none placeholder:text-[#c0a078]";
+  const cardClass = "rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-6 shadow-sm";
+  const labelClass = "block text-sm font-medium text-[#a07030]";
+
+  const saveActions = (
+    <div className="flex items-center gap-3">
+      {savedAt && <span className="text-xs text-[#9a7a58]">已保存 {savedAt}</span>}
+      <button onClick={handleSave} className="rounded-full bg-[#7c4f2a] px-5 py-1.5 text-sm text-amber-50 transition hover:bg-[#643e1f]">
+        保存
+      </button>
+    </div>
+  );
 
   return (
-    <main className="min-h-screen bg-[#1c1108] text-[#f0e6d3]">
-      <div className="mx-auto max-w-2xl px-8 py-12">
-        <div className="mb-10 flex items-start justify-between">
-          <div>
-            <Link href="/" className="mb-4 inline-block text-sm text-[#c8a878] transition hover:text-[#f0e6d3]">← 回到小屋</Link>
-            <h1 className="text-3xl font-semibold text-[#f0e6d3]">成人创作设置</h1>
-            <p className="mt-2 text-sm text-[#c8a878]">管理你的创作分级偏好与边界设定，仅保存在本地。</p>
-          </div>
-          <div className="flex flex-col items-end gap-2 pt-8">
-            {savedAt && <span className="text-xs text-[#8a6040]">已保存 {savedAt}</span>}
-            <button onClick={handleSave} className="rounded-full bg-[#6e4b2d] px-6 py-2 text-sm text-amber-50 transition hover:bg-[#58391f]">保存</button>
-          </div>
-        </div>
+    <main className="min-h-screen bg-[#f5f0e8] text-[#3d2b1a]">
+      <div className="mx-auto max-w-2xl px-8 py-10">
+        <PageHeader
+          title="成人创作设置"
+          subtitle="管理你的创作分级偏好与边界设定，仅保存在本地。"
+          actions={saveActions}
+        />
 
         <div className="space-y-5">
           <div className={cardClass}>
             <div className="flex items-center justify-between">
               <label className={labelClass}>成人创作模式</label>
               <button onClick={() => set("enabled", !settings.enabled)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.enabled ? "bg-[#6e4b2d]" : "bg-[#4c2c14]"}`}>
-                <span className={`inline-block h-4 w-4 translate-x-1 rounded-full bg-[#f0e6d3] shadow transition-transform ${settings.enabled ? "translate-x-6" : ""}`} />
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.enabled ? "bg-[#7c4f2a]" : "bg-[#d8c8a8]"}`}>
+                <span className={`inline-block h-4 w-4 translate-x-1 rounded-full bg-white shadow transition-transform ${settings.enabled ? "translate-x-6" : ""}`} />
               </button>
             </div>
-            <p className="mt-2 text-sm text-[#8a6040]">{settings.enabled ? "已开启成人向创作模式" : "开启成人向创作模式"}</p>
+            <p className="mt-2 text-sm text-[#9a7a58]">{settings.enabled ? "已开启成人向创作模式" : "开启成人向创作模式"}</p>
           </div>
 
           <div className={cardClass}>
@@ -73,7 +76,7 @@ export default function AdultSettingsPage() {
             <div className="flex gap-3">
               {(["全年龄", "16+", "18+"] as const).map(r => (
                 <button key={r} onClick={() => set("rating", r)}
-                  className={`flex-1 rounded-xl border py-2 text-sm transition ${settings.rating === r ? "border-[#6e4b2d] bg-[#6e4b2d] text-amber-50" : "border-[#6a4020] text-[#c8a878] hover:border-[#9b744d] hover:text-[#f0e6d3]"}`}>
+                  className={`flex-1 rounded-xl border py-2 text-sm transition ${settings.rating === r ? "border-[#7c4f2a] bg-[#7c4f2a] text-amber-50" : "border-[#e0d4c0] text-[#7c5038] hover:border-[#c8a87a]"}`}>
                   {r}
                 </button>
               ))}
@@ -105,8 +108,8 @@ export default function AdultSettingsPage() {
         </div>
 
         <div className="mt-8 flex items-center justify-between">
-          {savedAt ? <span className="text-sm text-[#8a6040]">已保存 {savedAt}</span> : <span />}
-          <button onClick={handleSave} className="rounded-full bg-[#6e4b2d] px-8 py-2.5 text-sm text-amber-50 transition hover:bg-[#58391f]">保存设置</button>
+          {savedAt ? <span className="text-sm text-[#9a7a58]">已保存 {savedAt}</span> : <span />}
+          <button onClick={handleSave} className="rounded-full bg-[#7c4f2a] px-8 py-2.5 text-sm text-amber-50 transition hover:bg-[#643e1f]">保存设置</button>
         </div>
       </div>
     </main>
