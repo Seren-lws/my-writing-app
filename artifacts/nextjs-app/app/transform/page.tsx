@@ -105,10 +105,10 @@ export default function TransformPage() {
     } finally { setIsStreaming(false); }
   }
 
-  const selectClass = "w-full rounded-xl border border-[#3a2010] bg-[#281405] px-3 py-2 text-sm text-[#f0e6d3] outline-none focus:border-[#c8a060] transition cursor-pointer";
+  const selectClass = "w-full rounded-xl border border-[#4c2c14] bg-[#311d0c] px-3 py-2 text-sm text-[#f0e6d3] outline-none focus:border-[#c8a060] transition cursor-pointer";
 
   return (
-    <main className="min-h-screen bg-[#140c05] text-[#f0e6d3]">
+    <main className="min-h-screen bg-[#1c1108] text-[#f0e6d3]">
       <div className="mx-auto max-w-3xl px-8 py-10">
         <header className="mb-8">
           <Link href="/" className="mb-4 inline-block text-sm text-[#c8a878] transition hover:text-[#f0e6d3]">← 回到小屋</Link>
@@ -121,14 +121,14 @@ export default function TransformPage() {
             <label className="text-sm font-medium text-[#d4a05a]">原始对话</label>
             {dialogue.replace(/\s/g, "").length > 0 && <span className="text-xs text-[#8a6040]">{dialogue.replace(/\s/g, "").length} 字</span>}
           </div>
-          <div className="rounded-2xl border border-[#5a3518] bg-[#1e1008] p-5 shadow-inner">
+          <div className="rounded-2xl border border-[#6a4020] bg-[#261609] p-5 shadow-inner">
             <textarea value={dialogue} onChange={e => setDialogue(e.target.value)} rows={10}
               className="w-full resize-none bg-transparent text-sm leading-7 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
               placeholder={"A：你昨晚为什么没回消息？\nB：……我看到了，只是不知道怎么回。\nA：（沉默片刻）那你现在知道了吗？\nB：还是不知道。但我想当面说。"} />
           </div>
         </section>
 
-        <section className="my-5 rounded-2xl border border-[#3a2010] bg-[#1e1008] p-5">
+        <section className="my-5 rounded-2xl border border-[#4c2c14] bg-[#261609] p-5">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-[#c8a878]">叙述视角</label>
@@ -152,7 +152,7 @@ export default function TransformPage() {
               <label className="text-xs font-medium text-[#c8a878]">特别要求</label>
               <input type="text" value={custom} onChange={e => setCustom(e.target.value)}
                 placeholder="重点写眼神，少写对白……"
-                className="w-full rounded-xl border border-[#3a2010] bg-[#281405] px-3 py-2 text-sm text-[#f0e6d3] outline-none placeholder:text-[#5a3820] focus:border-[#c8a060] transition" />
+                className="w-full rounded-xl border border-[#4c2c14] bg-[#311d0c] px-3 py-2 text-sm text-[#f0e6d3] outline-none placeholder:text-[#5a3820] focus:border-[#c8a060] transition" />
             </div>
           </div>
 
@@ -167,7 +167,7 @@ export default function TransformPage() {
 
           <div className="mt-5 flex justify-end">
             <button onClick={isStreaming ? () => abortRef.current?.abort() : handleTransform}
-              className={`rounded-full px-8 py-2.5 text-sm text-amber-50 transition ${isStreaming ? "bg-[#5a3518] hover:bg-[#3a2010]" : "bg-[#6e4b2d] hover:bg-[#58391f]"}`}>
+              className={`rounded-full px-8 py-2.5 text-sm text-amber-50 transition ${isStreaming ? "bg-[#6a4020] hover:bg-[#4c2c14]" : "bg-[#6e4b2d] hover:bg-[#58391f]"}`}>
               {isStreaming ? "停止" : "开始炼字 🔥"}
             </button>
           </div>
@@ -181,7 +181,7 @@ export default function TransformPage() {
             </div>
             {error && <div className="mb-3 rounded-xl bg-red-950/50 px-4 py-3 text-sm text-red-400 border border-red-900">{error}</div>}
             {(output || isStreaming) && (
-              <div className="rounded-2xl border border-[#3a2010] bg-[#1e1008] p-6 shadow-sm">
+              <div className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-6 shadow-sm">
                 <pre className="whitespace-pre-wrap font-sans text-sm leading-8 text-[#e8d5b7]">
                   {output}
                   {isStreaming && <span className="animate-pulse text-[#c8a878]">▋</span>}
@@ -191,9 +191,9 @@ export default function TransformPage() {
             {output && !isStreaming && (
               <div className="mt-4 flex justify-end gap-3">
                 <button onClick={() => navigator.clipboard.writeText(output)}
-                  className="rounded-full border border-[#5a3518] px-5 py-2 text-sm text-[#d4a05a] transition hover:bg-[#281405]">复制正文</button>
+                  className="rounded-full border border-[#6a4020] px-5 py-2 text-sm text-[#d4a05a] transition hover:bg-[#311d0c]">复制正文</button>
                 <button onClick={() => { setDialogue(""); setOutput(""); }}
-                  className="rounded-full border border-[#5a3518] px-5 py-2 text-sm text-[#c8a878] transition hover:bg-[#281405]">重新开始</button>
+                  className="rounded-full border border-[#6a4020] px-5 py-2 text-sm text-[#c8a878] transition hover:bg-[#311d0c]">重新开始</button>
               </div>
             )}
           </section>

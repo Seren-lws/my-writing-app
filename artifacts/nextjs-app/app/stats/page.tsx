@@ -39,7 +39,7 @@ export default function StatsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#140c05] text-[#f0e6d3]">
+    <main className="min-h-screen bg-[#1c1108] text-[#f0e6d3]">
       <div className="mx-auto max-w-xl px-8 py-16 flex flex-col items-center">
         <Link href="/" className="mb-8 self-start text-sm text-[#c8a878] transition hover:text-[#f0e6d3]">← 回到小屋</Link>
         <h1 className="text-3xl font-semibold text-[#f0e6d3] mb-2">成绩看板</h1>
@@ -51,14 +51,14 @@ export default function StatsPage() {
             { label: "连续打卡", value: `🔥 ${streak}` },
             { label: "累计打卡", value: String(checkedDays) },
           ].map(({ label, value }) => (
-            <div key={label} className="rounded-2xl border border-[#3a2010] bg-[#1e1008] p-5 flex flex-col items-center gap-1 shadow-sm">
+            <div key={label} className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-5 flex flex-col items-center gap-1 shadow-sm">
               <span className="text-2xl font-semibold text-[#d4a05a]">{value}</span>
               <span className="text-xs text-[#8a6040]">{label}</span>
             </div>
           ))}
         </div>
 
-        <Link href="/calendar" className="rounded-full border border-[#5a3518] bg-[#1e1008] px-6 py-2.5 text-sm text-[#d4a05a] transition hover:bg-[#281405]">
+        <Link href="/calendar" className="rounded-full border border-[#6a4020] bg-[#261609] px-6 py-2.5 text-sm text-[#d4a05a] transition hover:bg-[#311d0c]">
           查看写作日历 →
         </Link>
       </div>

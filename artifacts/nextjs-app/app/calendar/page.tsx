@@ -104,7 +104,7 @@ export default function CalendarPage() {
   if (!ready) return null;
 
   return (
-    <main className="min-h-screen bg-[#140c05] text-[#f0e6d3]">
+    <main className="min-h-screen bg-[#1c1108] text-[#f0e6d3]">
       <style>{`
         @keyframes stamp { 0% { transform: scale(1.35); } 60% { transform: scale(0.92); } 100% { transform: scale(1); } }
         .animate-stamp { animation: stamp 0.4s ease-out; }
@@ -125,19 +125,19 @@ export default function CalendarPage() {
             { value: String(monthCheckedDays), label: "本月打卡天数" },
             { value: fmtCount(todayWordCount) || "—", label: "今日字数" },
           ].map(({ value, label }) => (
-            <div key={label} className="rounded-2xl border border-[#3a2010] bg-[#1e1008] p-5 text-center shadow-sm">
+            <div key={label} className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-5 text-center shadow-sm">
               <p className="text-2xl font-semibold text-[#d4a05a]">{value}</p>
               <p className="mt-1.5 text-xs text-[#c8a878]">{label}</p>
             </div>
           ))}
         </div>
 
-        <div className="rounded-2xl border border-[#3a2010] bg-[#1e1008] p-6 shadow-sm">
+        <div className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-6 shadow-sm">
           <div className="mb-5 flex items-center justify-between">
-            <button onClick={prevMonth} className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-[#c8a878] transition hover:bg-[#3a2010]">‹</button>
+            <button onClick={prevMonth} className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-[#c8a878] transition hover:bg-[#4c2c14]">‹</button>
             <span className="font-medium text-[#f0e6d3]">{year}年{month + 1}月</span>
             <button onClick={nextMonth} disabled={!canGoNext}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-[#c8a878] transition hover:bg-[#3a2010] disabled:cursor-not-allowed disabled:opacity-25">›</button>
+              className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-[#c8a878] transition hover:bg-[#4c2c14] disabled:cursor-not-allowed disabled:opacity-25">›</button>
           </div>
 
           <div className="mb-1 grid grid-cols-7">
@@ -164,9 +164,9 @@ export default function CalendarPage() {
                   "relative flex min-h-[52px] flex-col items-center justify-center rounded-xl py-2.5 text-center transition-colors",
                   isFuture ? "cursor-not-allowed opacity-25" : "",
                   isToday && checked ? "bg-[#6e4b2d]" : "",
-                  isToday && !checked ? "bg-[#281405] ring-2 ring-[#6e4b2d]" : "",
-                  !isToday && checked ? "bg-[#3a2010]" : "",
-                  !isToday && !checked && !isFuture ? "hover:bg-[#281405]" : "",
+                  isToday && !checked ? "bg-[#311d0c] ring-2 ring-[#6e4b2d]" : "",
+                  !isToday && checked ? "bg-[#4c2c14]" : "",
+                  !isToday && !checked && !isFuture ? "hover:bg-[#311d0c]" : "",
                   isStamping ? "animate-stamp" : "",
                 ].filter(Boolean).join(" ")}>
                   <span className={`text-sm font-medium leading-none ${isToday && checked ? "text-amber-50" : "text-[#f0e6d3]"}`}>{day}</span>
@@ -179,19 +179,19 @@ export default function CalendarPage() {
         </div>
 
         {isCurrentMonth && (
-          <div className="mt-5 rounded-2xl border border-[#3a2010] bg-[#1e1008] p-6 shadow-sm">
+          <div className="mt-5 rounded-2xl border border-[#4c2c14] bg-[#261609] p-6 shadow-sm">
             <p className="mb-4 text-sm font-medium text-[#d4a05a]">
               今天 · {now.getFullYear()}年{now.getMonth() + 1}月{now.getDate()}日
             </p>
             <div className="flex items-center gap-3">
-              <div className="flex flex-1 items-center gap-2 rounded-xl border border-[#3a2010] bg-[#281405] px-4 py-2.5">
+              <div className="flex flex-1 items-center gap-2 rounded-xl border border-[#4c2c14] bg-[#311d0c] px-4 py-2.5">
                 <input type="number" value={wordInput} onChange={e => handleWordChange(e.target.value)}
                   placeholder="今天写了多少字" min={0}
                   className="flex-1 bg-transparent text-sm text-[#f0e6d3] outline-none placeholder:text-[#5a3820] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
                 <span className="shrink-0 text-sm text-[#c8a878]">字</span>
               </div>
               <button onClick={handleCheckIn} disabled={isCheckedIn}
-                className={`shrink-0 rounded-full px-6 py-2.5 text-sm transition ${isCheckedIn ? "cursor-default bg-[#5a3518] text-amber-200" : "bg-[#6e4b2d] text-amber-50 hover:bg-[#58391f] active:scale-95"}`}>
+                className={`shrink-0 rounded-full px-6 py-2.5 text-sm transition ${isCheckedIn ? "cursor-default bg-[#6a4020] text-amber-200" : "bg-[#6e4b2d] text-amber-50 hover:bg-[#58391f] active:scale-95"}`}>
                 {isCheckedIn ? "已打卡 ✓" : "今天打卡 ✍️"}
               </button>
             </div>

@@ -31,7 +31,7 @@ export default function StylePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#140c05] text-[#f0e6d3]">
+    <main className="min-h-screen bg-[#1c1108] text-[#f0e6d3]">
       <div className="mx-auto max-w-2xl px-8 py-12">
         <div className="mb-10 flex items-start justify-between">
           <div>
@@ -47,7 +47,7 @@ export default function StylePage() {
 
         <div className="space-y-6">
           {fields.map(({ key, label, placeholder }) => (
-            <div key={key} className="rounded-2xl border border-[#3a2010] bg-[#1e1008] p-6 shadow-sm">
+            <div key={key} className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-6 shadow-sm">
               <label className="mb-3 block text-sm font-medium text-[#d4a05a]">{label}</label>
               <textarea rows={3} value={dna[key]} onChange={e => handleChange(key, e.target.value)} placeholder={placeholder}
                 className="w-full resize-none bg-transparent text-sm leading-7 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]" />

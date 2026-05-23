@@ -283,9 +283,9 @@ export default function AdvisorPanel({
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#1e1008]">
+    <div className="flex h-full flex-col bg-[#261609]">
       {/* Toolbar */}
-      <div className="flex items-center justify-between border-b border-[#3a2010] px-4 py-2">
+      <div className="flex items-center justify-between border-b border-[#4c2c14] px-4 py-2">
         <span className="text-sm font-medium text-[#d4a05a]">写作军师</span>
         <div className="flex items-center gap-3">
           {modelOptions.length > 0 && (
@@ -297,7 +297,7 @@ export default function AdvisorPanel({
                   localStorage.setItem(modelKey, e.target.value);
                 } catch {}
               }}
-              className="rounded-lg border border-[#5a3518] bg-[#281405] px-2 py-1 text-xs text-[#c8a878] outline-none"
+              className="rounded-lg border border-[#6a4020] bg-[#311d0c] px-2 py-1 text-xs text-[#c8a878] outline-none"
             >
               {modelOptions.map((m) => (
                 <option key={m} value={m}>
@@ -331,7 +331,7 @@ export default function AdvisorPanel({
               className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-6 ${
                 m.role === "user"
                   ? "bg-[#6e4b2d] text-amber-50"
-                  : "border border-[#3a2010] bg-[#281405] text-[#f0e6d3]"
+                  : "border border-[#4c2c14] bg-[#311d0c] text-[#f0e6d3]"
               }`}
             >
               {m.content ||
@@ -343,8 +343,8 @@ export default function AdvisorPanel({
       </div>
 
       {/* Input */}
-      <div className="border-t border-[#3a2010] p-3">
-        <div className="flex items-end gap-2 rounded-2xl border border-[#5a3518] bg-[#281405] px-4 py-2">
+      <div className="border-t border-[#4c2c14] p-3">
+        <div className="flex items-end gap-2 rounded-2xl border border-[#6a4020] bg-[#311d0c] px-4 py-2">
           <textarea
             rows={2}
             value={input}

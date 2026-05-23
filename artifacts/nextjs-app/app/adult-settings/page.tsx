@@ -38,11 +38,11 @@ export default function AdultSettingsPage() {
   }
 
   const textareaClass = "w-full resize-none bg-transparent text-sm leading-7 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]";
-  const cardClass = "rounded-2xl border border-[#3a2010] bg-[#1e1008] p-6 shadow-sm";
+  const cardClass = "rounded-2xl border border-[#4c2c14] bg-[#261609] p-6 shadow-sm";
   const labelClass = "block text-sm font-medium text-[#d4a05a]";
 
   return (
-    <main className="min-h-screen bg-[#140c05] text-[#f0e6d3]">
+    <main className="min-h-screen bg-[#1c1108] text-[#f0e6d3]">
       <div className="mx-auto max-w-2xl px-8 py-12">
         <div className="mb-10 flex items-start justify-between">
           <div>
@@ -61,7 +61,7 @@ export default function AdultSettingsPage() {
             <div className="flex items-center justify-between">
               <label className={labelClass}>成人创作模式</label>
               <button onClick={() => set("enabled", !settings.enabled)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.enabled ? "bg-[#6e4b2d]" : "bg-[#3a2010]"}`}>
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.enabled ? "bg-[#6e4b2d]" : "bg-[#4c2c14]"}`}>
                 <span className={`inline-block h-4 w-4 translate-x-1 rounded-full bg-[#f0e6d3] shadow transition-transform ${settings.enabled ? "translate-x-6" : ""}`} />
               </button>
             </div>
@@ -73,7 +73,7 @@ export default function AdultSettingsPage() {
             <div className="flex gap-3">
               {(["全年龄", "16+", "18+"] as const).map(r => (
                 <button key={r} onClick={() => set("rating", r)}
-                  className={`flex-1 rounded-xl border py-2 text-sm transition ${settings.rating === r ? "border-[#6e4b2d] bg-[#6e4b2d] text-amber-50" : "border-[#5a3518] text-[#c8a878] hover:border-[#9b744d] hover:text-[#f0e6d3]"}`}>
+                  className={`flex-1 rounded-xl border py-2 text-sm transition ${settings.rating === r ? "border-[#6e4b2d] bg-[#6e4b2d] text-amber-50" : "border-[#6a4020] text-[#c8a878] hover:border-[#9b744d] hover:text-[#f0e6d3]"}`}>
                   {r}
                 </button>
               ))}

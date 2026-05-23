@@ -36,7 +36,7 @@ export default function InspirationsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#140c05] px-8 py-10 text-[#f0e6d3]">
+    <main className="min-h-screen bg-[#1c1108] px-8 py-10 text-[#f0e6d3]">
       <div className="mx-auto max-w-5xl">
         <header className="mb-8 flex items-center justify-between">
           <div>
@@ -44,15 +44,15 @@ export default function InspirationsPage() {
             <h1 className="mt-3 text-4xl font-semibold text-[#f0e6d3]">灵感收集</h1>
             <p className="mt-3 text-[#c8a878]">先记下来，不急着整理。灵感可以乱一点，故事会自己长出来。</p>
           </div>
-          <Link href="/" className="rounded-full border border-[#5a3518] bg-[#1e1008] px-5 py-2 text-sm text-[#d4a05a] shadow-sm transition hover:bg-[#281405]">
+          <Link href="/" className="rounded-full border border-[#6a4020] bg-[#261609] px-5 py-2 text-sm text-[#d4a05a] shadow-sm transition hover:bg-[#311d0c]">
             ← 回到小屋
           </Link>
         </header>
 
-        <section className="mb-8 rounded-[1.5rem] border border-[#5a3518] bg-[#1e1008] p-6 shadow-sm">
+        <section className="mb-8 rounded-[1.5rem] border border-[#6a4020] bg-[#261609] p-6 shadow-sm">
           <label className="mb-3 block text-sm font-medium text-[#d4a05a]">新灵感</label>
           <textarea value={content} onChange={e => setContent(e.target.value)}
-            className="min-h-32 w-full resize-none rounded-2xl border border-[#3a2010] bg-[#281405] p-4 leading-7 text-[#f0e6d3] outline-none placeholder:text-[#5a3820] focus:border-[#c8a060] transition"
+            className="min-h-32 w-full resize-none rounded-2xl border border-[#4c2c14] bg-[#311d0c] p-4 leading-7 text-[#f0e6d3] outline-none placeholder:text-[#5a3820] focus:border-[#c8a060] transition"
             placeholder="比如一句台词、一个场景、一个梗、一个人物动作……" />
           <div className="mt-4 flex items-center justify-between">
             <p className="text-sm text-[#8a6040]">{content.trim().length} 字</p>
@@ -64,7 +64,7 @@ export default function InspirationsPage() {
         </section>
 
         {inspirations.length === 0 ? (
-          <div className="rounded-[1.5rem] border border-dashed border-[#5a3518] bg-[#1e1008]/60 p-10 text-center text-[#8a6040]">
+          <div className="rounded-[1.5rem] border border-dashed border-[#6a4020] bg-[#261609]/60 p-10 text-center text-[#8a6040]">
             这里还没有便签。先写下第一条灵感吧。
           </div>
         ) : (

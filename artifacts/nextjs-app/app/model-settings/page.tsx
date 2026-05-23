@@ -22,12 +22,12 @@ export default function ModelSettingsPage() {
     setSavedAt(new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }));
   }
 
-  const inputClass = "w-full rounded-xl border border-[#3a2010] bg-[#281405] px-4 py-2.5 text-sm text-[#f0e6d3] outline-none placeholder:text-[#5a3820] focus:border-[#c8a060] transition";
-  const cardClass = "rounded-2xl border border-[#3a2010] bg-[#1e1008] p-6 shadow-sm";
+  const inputClass = "w-full rounded-xl border border-[#4c2c14] bg-[#311d0c] px-4 py-2.5 text-sm text-[#f0e6d3] outline-none placeholder:text-[#5a3820] focus:border-[#c8a060] transition";
+  const cardClass = "rounded-2xl border border-[#4c2c14] bg-[#261609] p-6 shadow-sm";
   const labelClass = "mb-2 block text-sm font-medium text-[#d4a05a]";
 
   return (
-    <main className="min-h-screen bg-[#140c05] text-[#f0e6d3]">
+    <main className="min-h-screen bg-[#1c1108] text-[#f0e6d3]">
       <div className="mx-auto max-w-2xl px-8 py-12">
         <div className="mb-10 flex items-start justify-between">
           <div>
