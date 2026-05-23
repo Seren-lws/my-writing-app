@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import PageHeader from "../components/PageHeader";
 
 type Book = { id: string; title: string };
 type Chapter = { id: string; bookId: string; title: string; content: string; updatedAt: string };
@@ -18,12 +19,12 @@ type Message = {
 };
 
 const ARCHETYPE_META: Record<Archetype, { label: string; emoji: string; zone: Zone; pill: string }> = {
-  cheerleader: { label: "夸夸迷妹", emoji: "🌸", zone: "encourage", pill: "bg-[#2a0f1a] border-[#7a3550] text-[#d4a0b8]" },
-  buddy:       { label: "互吹搭子", emoji: "✨", zone: "encourage", pill: "bg-[#1e1500] border-[#7a5010] text-[#c8a060]" },
-  urger:       { label: "急催党",   emoji: "⚡", zone: "urge",     pill: "bg-[#1e1000] border-[#8b4510] text-[#d4803a]" },
-  analyst:     { label: "细腻分析派", emoji: "🔍", zone: "feedback", pill: "bg-[#0a1520] border-[#2a5080] text-[#7ab0d0]" },
-  critic:      { label: "毒舌老读者", emoji: "🎯", zone: "feedback", pill: "bg-[#1a1508] border-[#5a4828] text-[#b0a080]" },
-  custom:      { label: "自定义",   emoji: "⭐", zone: "feedback", pill: "bg-[#180f20] border-[#5a3080] text-[#b09ad0]" },
+  cheerleader: { label: "夸夸迷妹",   emoji: "🌸", zone: "encourage", pill: "bg-pink-50 border-pink-200 text-rose-700" },
+  buddy:       { label: "互吹搭子",   emoji: "✨", zone: "encourage", pill: "bg-amber-50 border-amber-200 text-amber-800" },
+  urger:       { label: "急催党",     emoji: "⚡", zone: "urge",     pill: "bg-orange-50 border-orange-200 text-orange-700" },
+  analyst:     { label: "细腻分析派", emoji: "🔍", zone: "feedback", pill: "bg-sky-50 border-sky-200 text-sky-700" },
+  critic:      { label: "毒舌老读者", emoji: "🎯", zone: "feedback", pill: "bg-stone-100 border-stone-300 text-stone-600" },
+  custom:      { label: "自定义",     emoji: "⭐", zone: "feedback", pill: "bg-violet-50 border-violet-200 text-violet-700" },
 };
 
 const ZONE_META: Record<Zone, { label: string; icon: string; hint: string }> = {
@@ -203,55 +204,48 @@ export default function ReadersPage() {
 
   if (!activeBookId) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#1c1108] text-[#c8a878]">
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f0e8] text-[#7c5038]">
         <p>还没有书籍，先去 <Link href="/" className="underline">首页</Link> 创建一本吧</p>
       </div>
     );
   }
 
-  const inputClass = "w-full rounded-xl border border-[#4c2c14] bg-[#311d0c] px-3 py-2 text-sm text-[#f0e6d3] outline-none focus:border-[#c8a060]";
+  const inputClass = "w-full rounded-xl border border-[#e0d4c0] bg-[#f0ead8] px-3 py-2 text-sm text-[#3d2b1a] outline-none focus:border-[#c8a87a]";
+
+  const headerActions = (
+    <div className="flex items-center gap-3">
+      {books.length > 1 && (
+        <select value={activeBookId} onChange={e => setActiveBookId(e.target.value)}
+          className="rounded-xl border border-[#e0d4c0] bg-[#f0ead8] px-3 py-1.5 text-sm text-[#3d2b1a] outline-none focus:border-[#c8a87a]">
+          {books.map(b => <option key={b.id} value={b.id}>{b.title}</option>)}
+        </select>
+      )}
+      <button onClick={() => setShowForm(v => !v)}
+        className="rounded-full bg-[#7c4f2a] px-4 py-2 text-sm text-amber-50 transition hover:bg-[#643e1f]">
+        {showForm ? "取消" : "+ 添加读者"}
+      </button>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#1c1108] text-[#f0e6d3]">
-      <header className="border-b border-[#4c2c14] bg-[#261609]/90 px-6 py-4">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-sm text-[#c8a878] transition hover:text-[#f0e6d3]">← 回到小屋</Link>
-            {activeBook && <><span className="text-[#6a4020]">/</span><span className="text-sm text-[#c8a878]">{activeBook.title}</span></>}
-          </div>
-          {books.length > 1 && (
-            <select value={activeBookId} onChange={e => setActiveBookId(e.target.value)}
-              className="rounded-lg border border-[#4c2c14] bg-[#311d0c] px-3 py-1.5 text-sm text-[#f0e6d3] outline-none">
-              {books.map(b => <option key={b.id} value={b.id}>{b.title}</option>)}
-            </select>
-          )}
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-[#f5f0e8] text-[#3d2b1a]">
       <div className="mx-auto max-w-3xl px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-[#f0e6d3]">读者来信</h1>
-            <p className="mt-1 text-sm text-[#c8a878]">
-              {bookReaders.length > 0 ? `${bookReaders.length} 位读者在陪你写` : "还没有读者，添加第一位吧"}
-            </p>
-          </div>
-          <button onClick={() => setShowForm(v => !v)}
-            className="rounded-full bg-[#6e4b2d] px-4 py-2 text-sm text-amber-50 transition hover:bg-[#58391f]">
-            {showForm ? "取消" : "+ 添加读者"}
-          </button>
-        </div>
+        <PageHeader
+          title="读者来信"
+          subtitle={activeBook ? `《${activeBook.title}》· ${bookReaders.length > 0 ? `${bookReaders.length} 位读者在陪你写` : "还没有读者，添加第一位吧"}` : (bookReaders.length > 0 ? `${bookReaders.length} 位读者在陪你写` : "还没有读者，添加第一位吧")}
+          actions={headerActions}
+        />
 
         {showForm && (
-          <div className="mb-6 rounded-2xl border border-[#6a4020] bg-[#261609] p-5 shadow-sm">
-            <p className="mb-4 text-sm font-medium text-[#d4a05a]">新读者档案</p>
+          <div className="mb-6 rounded-2xl border border-[#c8a87a] bg-[#faf7f2] p-5 shadow-sm">
+            <p className="mb-4 text-sm font-medium text-[#a07030]">新读者档案</p>
 
             <div className="mb-3">
-              <label className="mb-1.5 block text-xs text-[#c8a878]">头像</label>
+              <label className="mb-1.5 block text-xs text-[#7c5038]">头像</label>
               <div className="flex flex-wrap gap-2">
                 {AVATARS.map(emoji => (
                   <button key={emoji} onClick={() => setFAvatar(emoji)}
-                    className={`h-9 w-9 rounded-xl text-lg transition ${fAvatar === emoji ? "bg-[#6e4b2d] ring-2 ring-[#c8a060]" : "bg-[#311d0c] hover:bg-[#4c2c14]"}`}>
+                    className={`h-9 w-9 rounded-xl text-lg transition ${fAvatar === emoji ? "bg-[#7c4f2a] ring-2 ring-[#c8a87a]" : "bg-[#f0ead8] hover:bg-[#e8d8c0]"}`}>
                     {emoji}
                   </button>
                 ))}
@@ -259,16 +253,16 @@ export default function ReadersPage() {
             </div>
 
             <div className="mb-3">
-              <label className="mb-1.5 block text-xs text-[#c8a878]">昵称</label>
+              <label className="mb-1.5 block text-xs text-[#7c5038]">昵称</label>
               <input value={fName} onChange={e => setFName(e.target.value)} placeholder="给这位读者起个名字" className={inputClass} />
             </div>
 
             <div className="mb-3">
-              <label className="mb-1.5 block text-xs text-[#c8a878]">人格类型</label>
+              <label className="mb-1.5 block text-xs text-[#7c5038]">人格类型</label>
               <div className="grid grid-cols-3 gap-2">
                 {(Object.keys(ARCHETYPE_META) as Archetype[]).map(a => (
                   <button key={a} onClick={() => setFArchetype(a)}
-                    className={`rounded-xl border px-2 py-2 text-xs transition ${fArchetype === a ? "border-[#6e4b2d] bg-[#6e4b2d] text-amber-50" : "border-[#4c2c14] bg-[#311d0c] text-[#c8a878] hover:border-[#9b744d]"}`}>
+                    className={`rounded-xl border px-2 py-2 text-xs transition ${fArchetype === a ? "border-[#7c4f2a] bg-[#7c4f2a] text-amber-50" : "border-[#e0d4c0] bg-[#f0ead8] text-[#7c5038] hover:border-[#c8a87a]"}`}>
                     {ARCHETYPE_META[a].emoji} {ARCHETYPE_META[a].label}
                   </button>
                 ))}
@@ -277,16 +271,16 @@ export default function ReadersPage() {
 
             {fArchetype === "custom" && (
               <div className="mb-3">
-                <label className="mb-1.5 block text-xs text-[#c8a878]">自定义人格描述</label>
+                <label className="mb-1.5 block text-xs text-[#7c5038]">自定义人格描述</label>
                 <textarea value={fCustom} onChange={e => setFCustom(e.target.value)} rows={2}
                   placeholder="描述这位读者的性格和留言风格……"
-                  className="w-full resize-none rounded-xl border border-[#4c2c14] bg-[#311d0c] px-3 py-2 text-sm text-[#f0e6d3] outline-none focus:border-[#c8a060] placeholder:text-[#5a3820]" />
+                  className="w-full resize-none rounded-xl border border-[#e0d4c0] bg-[#f0ead8] px-3 py-2 text-sm text-[#3d2b1a] outline-none focus:border-[#c8a87a] placeholder:text-[#c0a078]" />
               </div>
             )}
 
             {bookChapters.length > 0 && (
               <div className="mb-4">
-                <label className="mb-1.5 block text-xs text-[#c8a878]">阅读进度（读到哪章）</label>
+                <label className="mb-1.5 block text-xs text-[#7c5038]">阅读进度（读到哪章）</label>
                 <select value={fProgress} onChange={e => setFProgress(Number(e.target.value))} className={inputClass}>
                   {bookChapters.map((ch, i) => <option key={ch.id} value={i}>第{i + 1}章：{ch.title}</option>)}
                 </select>
@@ -294,7 +288,7 @@ export default function ReadersPage() {
             )}
 
             <button onClick={handleAddReader} disabled={!fName.trim()}
-              className="w-full rounded-xl bg-[#6e4b2d] py-2.5 text-sm text-amber-50 transition hover:bg-[#58391f] disabled:opacity-40">
+              className="w-full rounded-xl bg-[#7c4f2a] py-2.5 text-sm text-amber-50 transition hover:bg-[#643e1f] disabled:opacity-40">
               添加这位读者
             </button>
           </div>
@@ -305,23 +299,23 @@ export default function ReadersPage() {
             {bookReaders.map(reader => {
               const meta = ARCHETYPE_META[reader.archetype];
               return (
-                <div key={reader.id} className="flex min-w-[158px] flex-col rounded-2xl border border-[#4c2c14] bg-[#261609] p-4 shadow-sm">
+                <div key={reader.id} className="flex min-w-[158px] flex-col rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-4 shadow-sm">
                   <div className="flex items-start justify-between">
                     <span className="text-3xl">{reader.avatar}</span>
-                    <button onClick={() => handleDelete(reader.id)} className="text-xs text-[#6a4020] transition hover:text-[#c8a878]">✕</button>
+                    <button onClick={() => handleDelete(reader.id)} className="text-xs text-[#b8956a] transition hover:text-[#7c5038]">✕</button>
                   </div>
-                  <p className="mt-2 text-sm font-medium text-[#f0e6d3]">{reader.name}</p>
+                  <p className="mt-2 text-sm font-medium text-[#3d2b1a]">{reader.name}</p>
                   <span className={`mt-1 self-start rounded-full border px-2 py-0.5 text-xs ${meta.pill}`}>
                     {meta.emoji} {meta.label}
                   </span>
-                  <p className="mt-1.5 text-xs text-[#8a6040]">
+                  <p className="mt-1.5 text-xs text-[#9a7a58]">
                     {bookChapters[reader.readingProgress] ? `读到第${reader.readingProgress + 1}章` : "还没开始读"}
                   </p>
                   {reader.archetype === "urger" && (
-                    <p className="mt-0.5 text-xs text-[#d4803a]">连续催更 {daysSince(reader.createdAt)} 天</p>
+                    <p className="mt-0.5 text-xs text-orange-600">连续催更 {daysSince(reader.createdAt)} 天</p>
                   )}
                   <button onClick={() => handleSummon(reader)} disabled={generatingId !== null}
-                    className="mt-3 w-full rounded-xl bg-[#6e4b2d] py-1.5 text-xs text-amber-50 transition hover:bg-[#58391f] disabled:opacity-50">
+                    className="mt-3 w-full rounded-xl bg-[#7c4f2a] py-1.5 text-xs text-amber-50 transition hover:bg-[#643e1f] disabled:opacity-50">
                     {generatingId === reader.id ? "生成中…" : "召唤留言"}
                   </button>
                 </div>
@@ -330,10 +324,10 @@ export default function ReadersPage() {
           </div>
         )}
 
-        <div className="mb-4 flex gap-1 rounded-2xl border border-[#4c2c14] bg-[#261609] p-1">
+        <div className="mb-4 flex gap-1 rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-1">
           {(Object.keys(ZONE_META) as Zone[]).map(zone => (
             <button key={zone} onClick={() => setActiveZone(zone)}
-              className={`flex-1 rounded-xl py-2 text-sm transition ${activeZone === zone ? "bg-[#6e4b2d] text-amber-50 shadow-sm" : "text-[#c8a878] hover:bg-[#311d0c]"}`}>
+              className={`flex-1 rounded-xl py-2 text-sm transition ${activeZone === zone ? "bg-[#7c4f2a] text-amber-50 shadow-sm" : "text-[#7c5038] hover:bg-[#f0ead8]"}`}>
               {ZONE_META[zone].icon} {ZONE_META[zone].label}
             </button>
           ))}
@@ -341,22 +335,22 @@ export default function ReadersPage() {
 
         <div className="space-y-4">
           {zoneMessages.length === 0 ? (
-            <div className="rounded-2xl border border-[#4c2c14] bg-[#261609]/60 p-10 text-center">
-              <p className="text-sm text-[#8a6040]">{ZONE_META[activeZone].hint}</p>
+            <div className="rounded-2xl border border-[#e0d4c0] bg-[#faf7f2]/60 p-10 text-center">
+              <p className="text-sm text-[#9a7a58]">{ZONE_META[activeZone].hint}</p>
             </div>
           ) : (
             zoneMessages.map((msg, idx) => (
-              <div key={msg.id} className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-5 shadow-sm">
+              <div key={msg.id} className="rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-5 shadow-sm">
                 <div className="mb-3 flex items-center gap-3">
                   <span className="text-2xl">{msg.readerAvatar}</span>
                   <div>
-                    <p className="text-sm font-medium text-[#f0e6d3]">{msg.readerName}</p>
-                    <p className="text-xs text-[#8a6040]">{timeAgo(msg.createdAt)}</p>
+                    <p className="text-sm font-medium text-[#3d2b1a]">{msg.readerName}</p>
+                    <p className="text-xs text-[#9a7a58]">{timeAgo(msg.createdAt)}</p>
                   </div>
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-7 text-[#e8d5b7]">
+                <p className="whitespace-pre-wrap text-sm leading-7 text-[#4a3525]">
                   {msg.content}
-                  {generatingId !== null && idx === 0 && <span className="animate-pulse text-[#c8a878]">▍</span>}
+                  {generatingId !== null && idx === 0 && <span className="animate-pulse text-[#7c5038]">▍</span>}
                 </p>
               </div>
             ))

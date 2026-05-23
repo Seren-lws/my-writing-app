@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+/* ── Design tokens: warm-parchment light theme ─────────────────────────────
+   Used by inner pages (all routes except / and /write).
+   Homepage and write page keep their own dark palette.
+────────────────────────────────────────────────────────────────────────── */
+:root {
+  --color-bg-page:       #f5f0e8;  /* warm parchment */
+  --color-bg-card:       #faf7f2;  /* soft paper */
+  --color-bg-input:      #f0ead8;  /* nested input / inset */
+  --color-bg-hover:      #ede5d5;  /* gentle hover */
+
+  --color-border-card:   #e0d4c0;  /* card edge */
+  --color-border-accent: #c8a87a;  /* button / focus */
+
+  --color-text-h1:       #3d2b1a;  /* headings */
+  --color-text-body:     #4a3525;  /* body prose */
+  --color-text-secondary:#7c5038;  /* labels, nav items */
+  --color-text-muted:    #9a7a58;  /* hints, dates */
+  --color-text-ghost:    #b8956a;  /* very muted */
+  --color-text-accent:   #a07030;  /* gold labels */
+  --color-text-eyebrow:  #a07840;  /* small-caps labels */
+  --color-placeholder:   #c0a078;
+
+  --color-btn-primary:   #7c4f2a;  /* main CTA */
+  --color-btn-hover:     #643e1f;
+}

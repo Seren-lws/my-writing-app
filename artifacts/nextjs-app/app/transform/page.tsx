@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import PageHeader from "../components/PageHeader";
 import { normalizeBaseUrl, streamChat } from "../lib/aiClient";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -128,25 +128,25 @@ function FavoriteCard({
   const wordCount = fav.output.replace(/\s/g, "").length;
 
   return (
-    <div className="rounded-2xl border border-[#4c2c14] bg-[#261609] overflow-hidden">
+    <div className="rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] overflow-hidden">
       {/* Card header */}
       <div className="px-5 pt-4 pb-3">
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-[#8a6040]">{fav.createdAt}</span>
-          <span className="text-xs text-[#5a3820]">·</span>
-          <span className="text-xs text-[#8a6040]">{wordCount} 字</span>
-          <span className="text-xs text-[#5a3820]">·</span>
-          <span className="rounded-full border border-[#3a2010] bg-[#311d0c] px-2 py-0.5 text-[10px] text-[#9a7050]">
+          <span className="text-xs text-[#9a7a58]">{fav.createdAt}</span>
+          <span className="text-xs text-[#c0a078]">·</span>
+          <span className="text-xs text-[#9a7a58]">{wordCount} 字</span>
+          <span className="text-xs text-[#c0a078]">·</span>
+          <span className="rounded-full border border-[#e0d4c0] bg-[#f0ead8] px-2 py-0.5 text-[10px] text-[#9a7a58]">
             {labelOf(POV_OPTIONS, fav.pov)}
           </span>
-          <span className="rounded-full border border-[#3a2010] bg-[#311d0c] px-2 py-0.5 text-[10px] text-[#9a7050]">
+          <span className="rounded-full border border-[#e0d4c0] bg-[#f0ead8] px-2 py-0.5 text-[10px] text-[#9a7a58]">
             {labelOf(STYLE_OPTIONS, fav.style)}
           </span>
-          <span className="rounded-full border border-[#3a2010] bg-[#311d0c] px-2 py-0.5 text-[10px] text-[#9a7050]">
+          <span className="rounded-full border border-[#e0d4c0] bg-[#f0ead8] px-2 py-0.5 text-[10px] text-[#9a7a58]">
             {labelOf(DETAIL_OPTIONS, fav.detail)}
           </span>
           {fav.custom && (
-            <span className="rounded-full border border-[#3a2010] bg-[#311d0c] px-2 py-0.5 text-[10px] text-[#9a7050]">
+            <span className="rounded-full border border-[#e0d4c0] bg-[#f0ead8] px-2 py-0.5 text-[10px] text-[#9a7a58]">
               {fav.custom.slice(0, 20)}{fav.custom.length > 20 ? "…" : ""}
             </span>
           )}
@@ -154,54 +154,54 @@ function FavoriteCard({
 
         {/* Source dialogue (collapsible) */}
         {showDialogue && (
-          <div className="mb-3 rounded-xl border border-[#3a2010] bg-[#1a0e04] px-4 py-3">
-            <p className="mb-1.5 text-[10px] tracking-wide text-[#6a4020] uppercase">原始对话</p>
-            <pre className="whitespace-pre-wrap font-sans text-xs leading-6 text-[#9a7050]">
+          <div className="mb-3 rounded-xl border border-[#e0d4c0] bg-[#f5f0e8] px-4 py-3">
+            <p className="mb-1.5 text-[10px] tracking-wide text-[#b8956a] uppercase">原始对话</p>
+            <pre className="whitespace-pre-wrap font-sans text-xs leading-6 text-[#7c5038]">
               {fav.sourceDialogue || "（无）"}
             </pre>
           </div>
         )}
 
         {/* Output preview / full */}
-        <div className="rounded-xl bg-[#1e1200] px-4 py-3">
-          <pre className="whitespace-pre-wrap font-sans text-sm leading-7 text-[#d4b890]">
+        <div className="rounded-xl bg-[#f0ead8] px-4 py-3">
+          <pre className="whitespace-pre-wrap font-sans text-sm leading-7 text-[#3d2b1a]">
             {expanded ? fav.output : preview}
             {!expanded && fav.output.length > 160 && (
-              <span className="text-[#6a4020]">…</span>
+              <span className="text-[#b8956a]">…</span>
             )}
           </pre>
         </div>
       </div>
 
       {/* Card actions */}
-      <div className="flex flex-wrap items-center gap-2 border-t border-[#3a2010] px-5 py-3">
+      <div className="flex flex-wrap items-center gap-2 border-t border-[#e0d4c0] px-5 py-3">
         <button
           onClick={() => setExpanded(v => !v)}
-          className="rounded-full border border-[#6a4020] px-4 py-1.5 text-xs text-[#c8a878] transition hover:bg-[#311d0c]"
+          className="rounded-full border border-[#e0d4c0] px-4 py-1.5 text-xs text-[#7c5038] transition hover:bg-[#f0ead8]"
         >
           {expanded ? "收起全文" : "查看全文"}
         </button>
         <button
           onClick={() => setShowDialogue(v => !v)}
-          className="rounded-full border border-[#6a4020] px-4 py-1.5 text-xs text-[#c8a878] transition hover:bg-[#311d0c]"
+          className="rounded-full border border-[#e0d4c0] px-4 py-1.5 text-xs text-[#7c5038] transition hover:bg-[#f0ead8]"
         >
           {showDialogue ? "收起对话" : "查看原始对话"}
         </button>
         <button
           onClick={handleCopy}
-          className="rounded-full border border-[#6a4020] px-4 py-1.5 text-xs text-[#d4a05a] transition hover:bg-[#311d0c]"
+          className="rounded-full border border-[#e0d4c0] px-4 py-1.5 text-xs text-[#a07030] transition hover:bg-[#f0ead8]"
         >
           {copyMsg || "复制全文"}
         </button>
         <button
           onClick={() => onReuse(fav)}
-          className="rounded-full border border-[#5a4020] bg-[#311d0c] px-4 py-1.5 text-xs text-[#d4a05a] transition hover:bg-[#4c2c14]"
+          className="rounded-full border border-[#e0d4c0] bg-[#f0ead8] px-4 py-1.5 text-xs text-[#a07030] transition hover:bg-[#e8d8c0]"
         >
           再次炼字 ↑
         </button>
         <button
           onClick={handleDelete}
-          className="ml-auto rounded-full border border-[#3a1010] px-4 py-1.5 text-xs text-[#8a5040] transition hover:border-red-900 hover:text-red-400"
+          className="ml-auto rounded-full border border-[#f0d0d0] px-4 py-1.5 text-xs text-[#c08080] transition hover:border-red-300 hover:text-red-500"
         >
           删除
         </button>
@@ -331,78 +331,77 @@ export default function TransformPage() {
 
   // ── UI ──
 
-  const selectClass = "w-full rounded-xl border border-[#4c2c14] bg-[#311d0c] px-3 py-2 text-sm text-[#f0e6d3] outline-none focus:border-[#c8a060] transition cursor-pointer";
+  const selectClass = "w-full rounded-xl border border-[#e0d4c0] bg-[#f0ead8] px-3 py-2 text-sm text-[#3d2b1a] outline-none focus:border-[#c8a87a] transition cursor-pointer";
 
   return (
-    <main className="min-h-screen bg-[#1c1108] text-[#f0e6d3]">
+    <main className="min-h-screen bg-[#f5f0e8] text-[#3d2b1a]">
       <div className="mx-auto max-w-3xl px-6 py-10 md:px-8">
 
-        <header className="mb-8">
-          <Link href="/" className="mb-4 inline-block text-sm text-[#c8a878] transition hover:text-[#f0e6d3]">← 回到小屋</Link>
-          <h1 className="text-3xl font-semibold text-[#f0e6d3]">对话炼字</h1>
-          <p className="mt-2 text-sm text-[#c8a878]">把角色的声音，炼成小说里的文字。</p>
-        </header>
+        <PageHeader
+          title="对话炼字"
+          subtitle="把角色的声音，炼成小说里的文字。"
+        />
 
         {/* Input */}
         <section ref={dialogueSectionRef}>
           {loadMsg && (
-            <div className="mb-3 rounded-xl border border-[#5a4010] bg-[#1e1500] px-4 py-2.5 text-sm text-[#c8a878]">
+            <div className="mb-3 rounded-xl border border-[#e0d4c0] bg-[#faf7f2] px-4 py-2.5 text-sm text-[#7c5038]">
               {loadMsg}
             </div>
           )}
           <div className="mb-2 flex items-center justify-between">
-            <label className="text-sm font-medium text-[#d4a05a]">原始对话</label>
+            <label className="text-sm font-medium text-[#a07030]">原始对话</label>
             {dialogue.replace(/\s/g, "").length > 0 && (
-              <span className="text-xs text-[#8a6040]">{dialogue.replace(/\s/g, "").length} 字</span>
+              <span className="text-xs text-[#9a7a58]">{dialogue.replace(/\s/g, "").length} 字</span>
             )}
           </div>
-          <div className="rounded-2xl border border-[#6a4020] bg-[#261609] p-5 shadow-inner">
+          <div className="rounded-2xl border border-[#c8a87a] bg-[#faf7f2] p-5 shadow-inner">
             <textarea
               value={dialogue}
               onChange={e => setDialogue(e.target.value)}
               rows={10}
-              className="w-full resize-none bg-transparent text-sm leading-7 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
+              className="w-full resize-none bg-transparent text-sm leading-7 text-[#3d2b1a] outline-none placeholder:text-[#c0a078]"
               placeholder={"A：你昨晚为什么没回消息？\nB：……我看到了，只是不知道怎么回。\nA：（沉默片刻）那你现在知道了吗？\nB：还是不知道。但我想当面说。"}
             />
           </div>
         </section>
 
         {/* Settings */}
-        <section className="my-5 rounded-2xl border border-[#4c2c14] bg-[#261609] p-5">
+        <section className="my-5 rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-5">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-[#c8a878]">叙述视角</label>
+              <label className="text-xs font-medium text-[#7c5038]">叙述视角</label>
               <select value={pov} onChange={e => setPov(e.target.value)} className={selectClass}>
                 {POV_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-[#c8a878]">文体风格</label>
+              <label className="text-xs font-medium text-[#7c5038]">文体风格</label>
               <select value={style} onChange={e => setStyle(e.target.value)} className={selectClass}>
                 {STYLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-[#c8a878]">详略程度</label>
+              <label className="text-xs font-medium text-[#7c5038]">详略程度</label>
               <select value={detail} onChange={e => setDetail(e.target.value)} className={selectClass}>
                 {DETAIL_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-[#c8a878]">特别要求</label>
+              <label className="text-xs font-medium text-[#7c5038]">特别要求</label>
               <input
                 type="text"
                 value={custom}
                 onChange={e => setCustom(e.target.value)}
                 placeholder="重点写眼神，少写对白……"
-                className="w-full rounded-xl border border-[#4c2c14] bg-[#311d0c] px-3 py-2 text-sm text-[#f0e6d3] outline-none placeholder:text-[#5a3820] focus:border-[#c8a060] transition"
+                className="w-full rounded-xl border border-[#e0d4c0] bg-[#f0ead8] px-3 py-2 text-sm text-[#3d2b1a] outline-none placeholder:text-[#c0a078] focus:border-[#c8a87a] transition"
               />
             </div>
           </div>
 
           {modelOptions.length > 0 && (
             <div className="mt-4 flex items-center gap-3">
-              <label className="shrink-0 text-xs text-[#c8a878]">模型</label>
+              <label className="shrink-0 text-xs text-[#7c5038]">模型</label>
               <select value={selectedModel} onChange={e => setSelectedModel(e.target.value)} className={selectClass}>
                 {modelOptions.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
@@ -412,7 +411,7 @@ export default function TransformPage() {
           <div className="mt-5 flex justify-end">
             <button
               onClick={isStreaming ? () => abortRef.current?.abort() : handleTransform}
-              className={`rounded-full px-8 py-2.5 text-sm text-amber-50 transition ${isStreaming ? "bg-[#6a4020] hover:bg-[#4c2c14]" : "bg-[#6e4b2d] hover:bg-[#58391f]"}`}
+              className={`rounded-full px-8 py-2.5 text-sm text-amber-50 transition ${isStreaming ? "bg-[#9a7a58] hover:bg-[#7c5038]" : "bg-[#7c4f2a] hover:bg-[#643e1f]"}`}
             >
               {isStreaming ? "停止" : "开始炼字 🔥"}
             </button>
@@ -423,19 +422,19 @@ export default function TransformPage() {
         {(output || error || isStreaming) && (
           <section>
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-sm font-medium text-[#d4a05a]">炼成的正文（草稿）</label>
-              {output && <span className="text-xs text-[#8a6040]">{output.replace(/\s/g, "").length} 字</span>}
+              <label className="text-sm font-medium text-[#a07030]">炼成的正文（草稿）</label>
+              {output && <span className="text-xs text-[#9a7a58]">{output.replace(/\s/g, "").length} 字</span>}
             </div>
             {error && (
-              <div className="mb-3 rounded-xl border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-400">
+              <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                 {error}
               </div>
             )}
             {(output || isStreaming) && (
-              <div className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-6 shadow-sm">
-                <pre className="whitespace-pre-wrap font-sans text-sm leading-8 text-[#e8d5b7]">
+              <div className="rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-6 shadow-sm">
+                <pre className="whitespace-pre-wrap font-sans text-sm leading-8 text-[#3d2b1a]">
                   {output}
-                  {isStreaming && <span className="animate-pulse text-[#c8a878]">▋</span>}
+                  {isStreaming && <span className="animate-pulse text-[#7c5038]">▋</span>}
                 </pre>
               </div>
             )}
@@ -443,19 +442,19 @@ export default function TransformPage() {
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <button
                   onClick={handleCopyOutput}
-                  className="rounded-full border border-[#6a4020] px-5 py-2 text-sm text-[#d4a05a] transition hover:bg-[#311d0c]"
+                  className="rounded-full border border-[#e0d4c0] px-5 py-2 text-sm text-[#a07030] transition hover:bg-[#f0ead8]"
                 >
                   {copyMsg || "复制正文"}
                 </button>
                 <button
                   onClick={handleFavorite}
-                  className="rounded-full border border-[#6a4020] px-5 py-2 text-sm text-[#c8a878] transition hover:bg-[#311d0c]"
+                  className="rounded-full border border-[#e0d4c0] px-5 py-2 text-sm text-[#7c5038] transition hover:bg-[#f0ead8]"
                 >
                   {favMsg || "收藏本次炼字 ☆"}
                 </button>
                 <button
                   onClick={() => { setDialogue(""); setOutput(""); setCopyMsg(""); setFavMsg(""); }}
-                  className="rounded-full border border-[#6a4020] px-5 py-2 text-sm text-[#8a6040] transition hover:bg-[#311d0c]"
+                  className="rounded-full border border-[#e0d4c0] px-5 py-2 text-sm text-[#9a7a58] transition hover:bg-[#f0ead8]"
                 >
                   重新开始
                 </button>
@@ -467,14 +466,14 @@ export default function TransformPage() {
         {/* Favorites list */}
         <section className="mt-12">
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-[#d4a05a]">炼字收藏</h2>
+            <h2 className="text-lg font-semibold text-[#a07030]">炼字收藏</h2>
             {favorites.length > 0 && (
-              <span className="text-xs text-[#8a6040]">共 {favorites.length} 条</span>
+              <span className="text-xs text-[#9a7a58]">共 {favorites.length} 条</span>
             )}
           </div>
 
           {favorites.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[#4c2c14] py-14 text-center text-[#5a3820]">
+            <div className="rounded-2xl border border-dashed border-[#e0d4c0] py-14 text-center text-[#b8956a]">
               <p className="text-3xl mb-3">✨</p>
               <p className="text-sm">还没有收藏，遇到喜欢的炼字结果就先收起来。</p>
             </div>

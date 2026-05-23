@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageHeader from "../components/PageHeader";
 
 function safeParse<T>(key: string, fallback: T): T {
   try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch { return fallback; }
@@ -39,11 +40,14 @@ export default function StatsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#1c1108] text-[#f0e6d3]">
-      <div className="mx-auto max-w-xl px-8 py-16 flex flex-col items-center">
-        <Link href="/" className="mb-8 self-start text-sm text-[#c8a878] transition hover:text-[#f0e6d3]">← 回到小屋</Link>
-        <h1 className="text-3xl font-semibold text-[#f0e6d3] mb-2">成绩看板</h1>
-        <p className="text-[#8a6040] mb-10 text-center">把每一份努力都算数。</p>
+    <main className="min-h-screen bg-[#f5f0e8] text-[#3d2b1a]">
+      <div className="mx-auto max-w-xl px-8 py-10 flex flex-col items-center">
+        <div className="w-full">
+          <PageHeader
+            title="成绩看板"
+            subtitle="把每一份努力都算数。"
+          />
+        </div>
 
         <div className="w-full grid grid-cols-3 gap-4 mb-10">
           {[
@@ -51,14 +55,14 @@ export default function StatsPage() {
             { label: "连续打卡", value: `🔥 ${streak}` },
             { label: "累计打卡", value: String(checkedDays) },
           ].map(({ label, value }) => (
-            <div key={label} className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-5 flex flex-col items-center gap-1 shadow-sm">
-              <span className="text-2xl font-semibold text-[#d4a05a]">{value}</span>
-              <span className="text-xs text-[#8a6040]">{label}</span>
+            <div key={label} className="rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-5 flex flex-col items-center gap-1 shadow-sm">
+              <span className="text-2xl font-semibold text-[#a07030]">{value}</span>
+              <span className="text-xs text-[#9a7a58]">{label}</span>
             </div>
           ))}
         </div>
 
-        <Link href="/calendar" className="rounded-full border border-[#6a4020] bg-[#261609] px-6 py-2.5 text-sm text-[#d4a05a] transition hover:bg-[#311d0c]">
+        <Link href="/calendar" className="rounded-full border border-[#c8a87a] bg-[#faf7f2] px-6 py-2.5 text-sm text-[#a07030] transition hover:bg-[#f0ead8] hover:border-[#a07030]">
           查看写作日历 →
         </Link>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import PageHeader from "../components/PageHeader";
 
 type DayRecord = { checkedIn: boolean; wordCount: number };
 type CalendarData = Record<string, DayRecord>;
@@ -104,20 +104,17 @@ export default function CalendarPage() {
   if (!ready) return null;
 
   return (
-    <main className="min-h-screen bg-[#1c1108] text-[#f0e6d3]">
+    <main className="min-h-screen bg-[#f5f0e8] text-[#3d2b1a]">
       <style>{`
         @keyframes stamp { 0% { transform: scale(1.35); } 60% { transform: scale(0.92); } 100% { transform: scale(1); } }
         .animate-stamp { animation: stamp 0.4s ease-out; }
       `}</style>
 
       <div className="mx-auto max-w-2xl px-8 py-10">
-        <header className="mb-8">
-          <Link href="/" className="mb-4 inline-block text-sm text-[#c8a878] transition hover:text-[#f0e6d3]">
-            ← 回到小屋
-          </Link>
-          <h1 className="text-3xl font-semibold text-[#f0e6d3]">写作日历</h1>
-          <p className="mt-2 text-sm text-[#c8a878]">记录每一天的创作，让坚持看得见。</p>
-        </header>
+        <PageHeader
+          title="写作日历"
+          subtitle="记录每一天的创作，让坚持看得见。"
+        />
 
         <div className="mb-6 grid grid-cols-3 gap-4">
           {[
@@ -125,24 +122,24 @@ export default function CalendarPage() {
             { value: String(monthCheckedDays), label: "本月打卡天数" },
             { value: fmtCount(todayWordCount) || "—", label: "今日字数" },
           ].map(({ value, label }) => (
-            <div key={label} className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-5 text-center shadow-sm">
-              <p className="text-2xl font-semibold text-[#d4a05a]">{value}</p>
-              <p className="mt-1.5 text-xs text-[#c8a878]">{label}</p>
+            <div key={label} className="rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-5 text-center shadow-sm">
+              <p className="text-2xl font-semibold text-[#a07030]">{value}</p>
+              <p className="mt-1.5 text-xs text-[#9a7a58]">{label}</p>
             </div>
           ))}
         </div>
 
-        <div className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-6 shadow-sm">
+        <div className="rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-6 shadow-sm">
           <div className="mb-5 flex items-center justify-between">
-            <button onClick={prevMonth} className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-[#c8a878] transition hover:bg-[#4c2c14]">‹</button>
-            <span className="font-medium text-[#f0e6d3]">{year}年{month + 1}月</span>
+            <button onClick={prevMonth} className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-[#7c5038] transition hover:bg-[#f0ead8]">‹</button>
+            <span className="font-medium text-[#3d2b1a]">{year}年{month + 1}月</span>
             <button onClick={nextMonth} disabled={!canGoNext}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-[#c8a878] transition hover:bg-[#4c2c14] disabled:cursor-not-allowed disabled:opacity-25">›</button>
+              className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-[#7c5038] transition hover:bg-[#f0ead8] disabled:cursor-not-allowed disabled:opacity-25">›</button>
           </div>
 
           <div className="mb-1 grid grid-cols-7">
             {WEEK_DAYS.map(d => (
-              <div key={d} className="py-1 text-center text-xs font-medium text-[#6a4a28]">{d}</div>
+              <div key={d} className="py-1 text-center text-xs font-medium text-[#b8956a]">{d}</div>
             ))}
           </div>
 
@@ -163,15 +160,15 @@ export default function CalendarPage() {
                 <div key={key} className={[
                   "relative flex min-h-[52px] flex-col items-center justify-center rounded-xl py-2.5 text-center transition-colors",
                   isFuture ? "cursor-not-allowed opacity-25" : "",
-                  isToday && checked ? "bg-[#6e4b2d]" : "",
-                  isToday && !checked ? "bg-[#311d0c] ring-2 ring-[#6e4b2d]" : "",
-                  !isToday && checked ? "bg-[#4c2c14]" : "",
-                  !isToday && !checked && !isFuture ? "hover:bg-[#311d0c]" : "",
+                  isToday && checked  ? "bg-[#7c4f2a] text-amber-50" : "",
+                  isToday && !checked ? "bg-[#f0ead8] ring-2 ring-[#c8a87a]" : "",
+                  !isToday && checked ? "bg-[#e8d8c0]" : "",
+                  !isToday && !checked && !isFuture ? "hover:bg-[#f0ead8]" : "",
                   isStamping ? "animate-stamp" : "",
                 ].filter(Boolean).join(" ")}>
-                  <span className={`text-sm font-medium leading-none ${isToday && checked ? "text-amber-50" : "text-[#f0e6d3]"}`}>{day}</span>
-                  {checked && <span className={`mt-0.5 text-xs ${isToday ? "text-amber-200" : "text-[#d4a05a]"}`}>✓</span>}
-                  {wc > 0 && <span className={`mt-0.5 text-[10px] leading-none ${isToday && checked ? "text-amber-200" : "text-[#8a6040]"}`}>{fmtCount(wc)}</span>}
+                  <span className={`text-sm font-medium leading-none ${isToday && checked ? "text-amber-50" : "text-[#3d2b1a]"}`}>{day}</span>
+                  {checked && <span className={`mt-0.5 text-xs ${isToday ? "text-amber-200" : "text-[#a07030]"}`}>✓</span>}
+                  {wc > 0 && <span className={`mt-0.5 text-[10px] leading-none ${isToday && checked ? "text-amber-200" : "text-[#9a7a58]"}`}>{fmtCount(wc)}</span>}
                 </div>
               );
             })}
@@ -179,23 +176,23 @@ export default function CalendarPage() {
         </div>
 
         {isCurrentMonth && (
-          <div className="mt-5 rounded-2xl border border-[#4c2c14] bg-[#261609] p-6 shadow-sm">
-            <p className="mb-4 text-sm font-medium text-[#d4a05a]">
+          <div className="mt-5 rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-6 shadow-sm">
+            <p className="mb-4 text-sm font-medium text-[#a07030]">
               今天 · {now.getFullYear()}年{now.getMonth() + 1}月{now.getDate()}日
             </p>
             <div className="flex items-center gap-3">
-              <div className="flex flex-1 items-center gap-2 rounded-xl border border-[#4c2c14] bg-[#311d0c] px-4 py-2.5">
+              <div className="flex flex-1 items-center gap-2 rounded-xl border border-[#e0d4c0] bg-[#f0ead8] px-4 py-2.5">
                 <input type="number" value={wordInput} onChange={e => handleWordChange(e.target.value)}
                   placeholder="今天写了多少字" min={0}
-                  className="flex-1 bg-transparent text-sm text-[#f0e6d3] outline-none placeholder:text-[#5a3820] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
-                <span className="shrink-0 text-sm text-[#c8a878]">字</span>
+                  className="flex-1 bg-transparent text-sm text-[#3d2b1a] outline-none placeholder:text-[#c0a078] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                <span className="shrink-0 text-sm text-[#7c5038]">字</span>
               </div>
               <button onClick={handleCheckIn} disabled={isCheckedIn}
-                className={`shrink-0 rounded-full px-6 py-2.5 text-sm transition ${isCheckedIn ? "cursor-default bg-[#6a4020] text-amber-200" : "bg-[#6e4b2d] text-amber-50 hover:bg-[#58391f] active:scale-95"}`}>
+                className={`shrink-0 rounded-full px-6 py-2.5 text-sm transition ${isCheckedIn ? "cursor-default bg-[#e8d8c0] text-[#a07030]" : "bg-[#7c4f2a] text-amber-50 hover:bg-[#643e1f] active:scale-95"}`}>
                 {isCheckedIn ? "已打卡 ✓" : "今天打卡 ✍️"}
               </button>
             </div>
-            {isCheckedIn && <p className="mt-3 text-xs text-[#8a6040]">今天已完成打卡，明天继续加油 ✨</p>}
+            {isCheckedIn && <p className="mt-3 text-xs text-[#9a7a58]">今天已完成打卡，明天继续加油 ✨</p>}
           </div>
         )}
       </div>

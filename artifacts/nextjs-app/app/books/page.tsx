@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageHeader from "../components/PageHeader";
 
 type Book = { id: string; title: string; createdAt: string; updatedAt: string };
 type Chapter = { id: string; bookId: string; title: string; content: string };
@@ -76,37 +77,28 @@ export default function BooksPage() {
   if (!ready) return null;
 
   return (
-    <main className="min-h-screen bg-[#1c1108] px-6 py-10 text-[#f0e6d3] md:px-12">
+    <main className="min-h-screen bg-[#f5f0e8] px-6 py-10 text-[#3d2b1a] md:px-12">
       <div className="mx-auto max-w-3xl">
-
-        {/* Header */}
-        <header className="mb-10">
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-xs tracking-[0.25em] text-[#9b744d]">MY WORKS</p>
-            <Link href="/" className="rounded-full border border-[#6a4020] px-4 py-1.5 text-sm text-[#c8a878] transition hover:bg-[#311d0c]">
-              ← 回到小屋
-            </Link>
-          </div>
-          <h1 className="text-3xl font-semibold text-[#f0e6d3]">我的作品库</h1>
-          <p className="mt-2 text-sm text-[#c8a878]">
-            {books.length > 0 ? `共 ${books.length} 部作品` : "还没有作品，新建第一本吧~"}
-          </p>
-        </header>
+        <PageHeader
+          eyebrow="MY WORKS"
+          title="我的作品库"
+          subtitle={books.length > 0 ? `共 ${books.length} 部作品` : "还没有作品，新建第一本吧~"}
+        />
 
         {/* New book input */}
-        <div className="mb-8 flex items-center gap-3 rounded-2xl border border-[#4c2c14] bg-[#261609] p-4">
+        <div className="mb-8 flex items-center gap-3 rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-4 shadow-sm">
           <input
             type="text"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
             placeholder="输入新作品名称，回车或点新建……"
-            className="flex-1 bg-transparent text-sm text-[#f0e6d3] outline-none placeholder:text-[#9b744d]"
+            className="flex-1 bg-transparent text-sm text-[#3d2b1a] outline-none placeholder:text-[#c0a078]"
           />
           <button
             onClick={handleCreate}
             disabled={!newTitle.trim()}
-            className="rounded-full bg-[#6e4b2d] px-5 py-2 text-sm text-amber-50 transition hover:bg-[#58391f] disabled:opacity-40"
+            className="rounded-full bg-[#7c4f2a] px-5 py-2 text-sm text-amber-50 transition hover:bg-[#643e1f] disabled:opacity-40"
           >
             + 新建
           </button>
@@ -114,7 +106,7 @@ export default function BooksPage() {
 
         {/* Book list */}
         {books.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[#4c2c14] py-20 text-center text-[#6a4020]">
+          <div className="rounded-2xl border border-dashed border-[#d8c8a0] py-20 text-center text-[#b8956a]">
             <p className="text-4xl mb-3">📖</p>
             <p className="text-sm">在上面输入书名，开始你的第一部作品</p>
           </div>
@@ -128,13 +120,11 @@ export default function BooksPage() {
               return (
                 <div
                   key={book.id}
-                  className="group rounded-2xl border border-[#4c2c14] bg-[#261609] transition hover:border-[#6e4b2d]"
+                  className="group rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] transition hover:border-[#c8a87a] hover:shadow-sm"
                 >
                   <div className="flex items-center gap-4 px-6 py-5">
-                    {/* Book icon */}
                     <span className="shrink-0 text-2xl">📗</span>
 
-                    {/* Title / edit */}
                     <div className="min-w-0 flex-1">
                       {isEditing ? (
                         <input
@@ -147,33 +137,32 @@ export default function BooksPage() {
                             if (e.key === "Escape") setEditingId(null);
                           }}
                           onBlur={() => handleRename(book.id)}
-                          className="w-full bg-transparent text-base font-semibold text-[#f0e6d3] outline-none border-b border-[#6e4b2d] pb-0.5"
+                          className="w-full bg-transparent text-base font-semibold text-[#3d2b1a] outline-none border-b border-[#c8a87a] pb-0.5"
                         />
                       ) : (
-                        <p className="truncate text-base font-semibold text-[#f0e6d3]">{book.title}</p>
+                        <p className="truncate text-base font-semibold text-[#3d2b1a]">{book.title}</p>
                       )}
-                      <p className="mt-1 text-xs text-[#8a6040]">
+                      <p className="mt-1 text-xs text-[#9a7a58]">
                         {chapterCount > 0 ? `${chapterCount} 章 · ` : ""}{fmtWords(wordCount)} · 更新于 {fmtDate(book.updatedAt)}
                       </p>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex shrink-0 items-center gap-2">
                       <button
                         onClick={() => { setEditingId(book.id); setEditTitle(book.title); }}
-                        className="rounded-lg px-3 py-1.5 text-xs text-[#8a6040] transition hover:bg-[#311d0c] hover:text-[#c8a878] opacity-0 group-hover:opacity-100"
+                        className="rounded-lg px-3 py-1.5 text-xs text-[#9a7a58] transition hover:bg-[#f0ead8] hover:text-[#7c5038] opacity-0 group-hover:opacity-100"
                       >
                         重命名
                       </button>
                       <button
                         onClick={() => handleDelete(book.id)}
-                        className="rounded-lg px-3 py-1.5 text-xs text-[#8a6040] transition hover:bg-[#311d0c] hover:text-red-400 opacity-0 group-hover:opacity-100"
+                        className="rounded-lg px-3 py-1.5 text-xs text-[#9a7a58] transition hover:bg-[#f0ead8] hover:text-red-500 opacity-0 group-hover:opacity-100"
                       >
                         删除
                       </button>
                       <Link
                         href={`/write?bookId=${book.id}`}
-                        className="rounded-full bg-[#6e4b2d] px-4 py-1.5 text-sm text-amber-50 transition hover:bg-[#58391f]"
+                        className="rounded-full bg-[#7c4f2a] px-4 py-1.5 text-sm text-amber-50 transition hover:bg-[#643e1f]"
                       >
                         进入写作 →
                       </Link>

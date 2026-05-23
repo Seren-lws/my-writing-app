@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body className="flex bg-stone-50 text-stone-800 min-h-screen font-sans antialiased">
+      <body className="flex bg-[#f5f0e8] text-[#3d2b1a] min-h-screen font-sans antialiased">
         <Nav />
         <main className="flex-1 overflow-auto">{children}</main>
       </body>
