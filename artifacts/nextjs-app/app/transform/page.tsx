@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { normalizeBaseUrl, streamChat } from "../lib/aiClient";
 
 type ModelSettings = { baseUrl: string; apiKey: string; defaultModel: string; modelsText: string };
-type WritingDNA = { languageStyle?: string; preferences?: string; taboos?: string };
+type WritingDNA = { languageStyle?: string; writingPrefs?: string; taboos?: string; references?: string; dynamics?: string };
 
 function safeParse<T>(key: string, fallback: T): T {
   try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch { return fallback; }
@@ -37,8 +38,10 @@ function buildSystemPrompt(params: { pov: string; style: string; detail: string;
   ];
   const dnaLines = [
     writingDNA.languageStyle && `语言风格：${writingDNA.languageStyle}`,
-    writingDNA.preferences && `写作偏好：${writingDNA.preferences}`,
+    writingDNA.writingPrefs && `写作偏好：${writingDNA.writingPrefs}`,
     writingDNA.taboos && `禁忌：${writingDNA.taboos}`,
+    writingDNA.references && `参考作品：${writingDNA.references}`,
+    writingDNA.dynamics && `人物张力：${writingDNA.dynamics}`,
   ].filter(Boolean);
   if (dnaLines.length > 0) sections.push(`【作者写作风格参考】\n${dnaLines.join("\n")}`);
   sections.push(`请把用户提供的对话改写为小说正文草稿。保留原有的情感走向和事件，不要添加原文没有的情节。直接输出正文，不要加解释或说明。`);
@@ -81,25 +84,14 @@ export default function TransformPage() {
     setOutput(""); setError(""); setIsStreaming(true);
     abortRef.current = new AbortController();
     try {
-      const res = await fetch(`${ms.baseUrl}/chat/completions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${ms.apiKey}` },
-        body: JSON.stringify({ model: selectedModel || ms.defaultModel, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: `请将以下对话改写为小说正文草稿：\n\n${dialogue}` }], stream: true }),
+      await streamChat({
+        baseUrl: normalizeBaseUrl(ms.baseUrl),
+        apiKey: ms.apiKey,
+        model: selectedModel || ms.defaultModel,
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: `请将以下对话改写为小说正文草稿：\n\n${dialogue}` }],
         signal: abortRef.current.signal,
+        onDelta: (delta) => setOutput(p => p + delta),
       });
-      if (!res.ok) throw new Error(`请求失败：${res.status} ${res.statusText}`);
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      outer: while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        for (const line of decoder.decode(value).split("\n")) {
-          if (!line.startsWith("data: ")) continue;
-          const payload = line.slice(6).trim();
-          if (payload === "[DONE]") break outer;
-          try { const text = JSON.parse(payload).choices?.[0]?.delta?.content; if (text) setOutput(p => p + text); } catch {}
-        }
-      }
     } catch (err) {
       if (err instanceof Error && err.name !== "AbortError") setError(err.message || "请求失败，请检查配置");
     } finally { setIsStreaming(false); }

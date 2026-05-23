@@ -34,6 +34,8 @@ export default function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
+  if (pathname === "/" || pathname === "/write") return null;
+
   useEffect(() => { setOpen(false); }, [pathname]);
 
   return (

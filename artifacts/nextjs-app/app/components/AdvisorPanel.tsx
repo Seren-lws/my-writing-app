@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { normalizeBaseUrl, streamChat } from "../lib/aiClient";
 
 type Chapter = {
   id: string;
@@ -30,11 +31,11 @@ function buildAdvisorPrompt(
     if (raw) {
       const d = JSON.parse(raw);
       dna = [
-        d.writingStyle && `写作风格：${d.writingStyle}`,
-        d.narrativePov && `叙事视角：${d.narrativePov}`,
-        d.toneVoice && `语调：${d.toneVoice}`,
-        d.avoidWords && `避免用词：${d.avoidWords}`,
+        d.languageStyle && `语言风格：${d.languageStyle}`,
+        d.writingPrefs && `写作偏好：${d.writingPrefs}`,
         d.taboos && `禁忌：${d.taboos}`,
+        d.references && `参考作品：${d.references}`,
+        d.dynamics && `人物关系与张力：${d.dynamics}`,
       ]
         .filter(Boolean)
         .join("\n");
@@ -42,20 +43,24 @@ function buildAdvisorPrompt(
   } catch {}
 
   try {
-    const raw = localStorage.getItem(`book-soul-${bookId}`);
+    const raw = localStorage.getItem("book-souls");
     if (raw) {
-      const s = JSON.parse(raw);
-      soul = [
-        s.genre && `类型：${s.genre}`,
-        s.theme && `主题：${s.theme}`,
-        s.worldview && `世界观：${s.worldview}`,
-        s.coreConflict && `核心冲突：${s.coreConflict}`,
-        s.emotionalCore && `情感内核：${s.emotionalCore}`,
-        s.targetReader && `目标读者：${s.targetReader}`,
-        s.extraNotes && `备注：${s.extraNotes}`,
-      ]
-        .filter(Boolean)
-        .join("\n");
+      const souls = JSON.parse(raw);
+      const s = Array.isArray(souls)
+        ? souls.find((x: Record<string, string>) => x.bookId === bookId)
+        : null;
+      if (s) {
+        soul = [
+          s.tone && `基调：${s.tone}`,
+          s.dynamics && `人物动力：${s.dynamics}`,
+          s.worldbuilding && `世界观：${s.worldbuilding}`,
+          s.redlines && `红线：${s.redlines}`,
+          s.keywords && `关键词：${s.keywords}`,
+          s.aiReminders && `AI提醒：${s.aiReminders}`,
+        ]
+          .filter(Boolean)
+          .join("\n");
+      }
     }
   } catch {}
 
@@ -215,54 +220,22 @@ export default function AdvisorPanel({
     try {
       const raw = localStorage.getItem("ai-model-settings");
       const ms = raw ? JSON.parse(raw) : {};
-      const baseUrl =
-        (ms.baseUrl ?? "").replace(/\/$/, "") || "https://api.openai.com";
-      const apiKey = ms.apiKey ?? "";
       const systemPrompt = buildAdvisorPrompt(bookId, chapters, activeChapterId);
 
-      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
+      await streamChat({
+        baseUrl: normalizeBaseUrl(ms.baseUrl ?? "https://api.openai.com/v1"),
+        apiKey: ms.apiKey ?? "",
+        model: selectedModel,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...nextMsgs.map((m) => ({ role: m.role, content: m.content })),
+        ],
         signal: abort.signal,
-        body: JSON.stringify({
-          model: selectedModel,
-          stream: true,
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...nextMsgs.map((m) => ({ role: m.role, content: m.content })),
-          ],
-        }),
+        onDelta: (delta) => {
+          accumulated += delta;
+          setMessages([...nextMsgs, { role: "assistant", content: accumulated }]);
+        },
       });
-
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      if (!reader) throw new Error("no reader");
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        for (const line of chunk.split("\n")) {
-          const trimmed = line.trim();
-          if (!trimmed.startsWith("data:")) continue;
-          const jsonStr = trimmed.slice(5).trim();
-          if (jsonStr === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const delta = parsed.choices?.[0]?.delta?.content ?? "";
-            if (delta) {
-              accumulated += delta;
-              setMessages([
-                ...nextMsgs,
-                { role: "assistant", content: accumulated },
-              ]);
-            }
-          } catch {}
-        }
-      }
     } catch (e: unknown) {
       if (e instanceof Error && e.name !== "AbortError") {
         accumulated = accumulated || "（请求出错，请检查模型设置）";

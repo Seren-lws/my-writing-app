@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import AdvisorPanel from "../components/AdvisorPanel";
+import { normalizeBaseUrl, streamChat, chatCompletion } from "../lib/aiClient";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -345,18 +346,12 @@ export default function WritePage() {
 最多返回10条，优先选最典型的。无问题则返回{"issues":[]}.`;
 
     try {
-      const baseUrl = (ms.baseUrl ?? "").replace(/\/$/, "");
-      const res = await fetch(`${baseUrl}/chat/completions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${ms.apiKey}` },
-        body: JSON.stringify({
-          model: selectedModel || ms.defaultModel || "",
-          messages: [{ role: "system", content: system }, { role: "user", content: `请分析：\n\n${content.slice(0, 4000)}` }],
-          stream: false,
-        }),
+      const text = await chatCompletion({
+        baseUrl: normalizeBaseUrl(ms.baseUrl ?? "https://api.openai.com/v1"),
+        apiKey: ms.apiKey ?? "",
+        model: selectedModel || ms.defaultModel || "",
+        messages: [{ role: "system", content: system }, { role: "user", content: `请分析：\n\n${content.slice(0, 4000)}` }],
       });
-      const data = await res.json();
-      const text = data.choices?.[0]?.message?.content ?? "";
       const m = text.match(/\{[\s\S]*\}/);
       if (m) setAiIssues(JSON.parse(m[0]).issues ?? []);
     } catch {
@@ -372,12 +367,12 @@ export default function WritePage() {
     if (aiStreaming) { aiAbortRef.current?.abort(); return; }
     let ms: { baseUrl?: string; apiKey?: string; defaultModel?: string } = {};
     try { const raw = localStorage.getItem("ai-model-settings"); if (raw) ms = JSON.parse(raw); } catch {}
-    const baseUrl = (ms.baseUrl ?? "").replace(/\/$/, "") || "https://api.openai.com";
+    const baseUrl = normalizeBaseUrl(ms.baseUrl ?? "https://api.openai.com/v1");
     const apiKey = ms.apiKey ?? "";
 
     let dna = ""; let soul = ""; let characters: Record<string, string>[] = [];
-    try { const r = localStorage.getItem("writing-dna"); if (r) { const d = JSON.parse(r); dna = [d.languageStyle && `语言风格：${d.languageStyle}`, d.preferences && `写作偏好：${d.preferences}`, d.taboos && `禁忌：${d.taboos}`].filter(Boolean).join("\n"); } } catch {}
-    try { const r = localStorage.getItem(`book-soul-${activeBookId}`); if (r) { const s = JSON.parse(r); soul = [s.tone && `基调：${s.tone}`, s.relationship && `主角关系：${s.relationship}`, s.worldRules && `世界观：${s.worldRules}`, s.mustNotBreak && `不能破坏：${s.mustNotBreak}`].filter(Boolean).join("\n"); } } catch {}
+    try { const r = localStorage.getItem("writing-dna"); if (r) { const d = JSON.parse(r); dna = [d.languageStyle && `语言风格：${d.languageStyle}`, d.writingPrefs && `写作偏好：${d.writingPrefs}`, d.taboos && `禁忌：${d.taboos}`, d.references && `参考作品：${d.references}`, d.dynamics && `人物张力：${d.dynamics}`].filter(Boolean).join("\n"); } } catch {}
+    try { const r = localStorage.getItem("book-souls"); if (r) { const souls = JSON.parse(r); const s = Array.isArray(souls) ? souls.find((x: Record<string, string>) => x.bookId === activeBookId) : null; if (s) soul = [s.tone && `基调：${s.tone}`, s.dynamics && `人物动力：${s.dynamics}`, s.worldbuilding && `世界观：${s.worldbuilding}`, s.redlines && `红线：${s.redlines}`, s.keywords && `关键词：${s.keywords}`, s.aiReminders && `AI提醒：${s.aiReminders}`].filter(Boolean).join("\n"); } } catch {}
     try { const r = localStorage.getItem("book-characters"); if (r) { const all = JSON.parse(r); characters = all.filter((c: Record<string, string>) => c.bookId === activeBookId); } } catch {}
 
     const charBlock = characters.length > 0 ? characters.map((c) => `${c.role ? `[${c.role}] ` : ""}${c.name}${c.alias ? `（${c.alias}）` : ""}${c.personality ? `：${c.personality}` : ""}`).join("\n") : "";
@@ -398,25 +393,14 @@ export default function WritePage() {
     let accumulated = "";
 
     try {
-      const res = await fetch(`${baseUrl}/chat/completions`, {
-        method: "POST", signal: abort.signal,
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: selectedModel || ms.defaultModel || "", stream: true, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userParts.join("\n\n") }] }),
+      await streamChat({
+        baseUrl,
+        apiKey,
+        model: selectedModel || ms.defaultModel || "",
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userParts.join("\n\n") }],
+        signal: abort.signal,
+        onDelta: (delta) => { accumulated += delta; setAiDraft(accumulated); },
       });
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      if (!reader) throw new Error("no reader");
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        for (const line of decoder.decode(value, { stream: true }).split("\n")) {
-          const t = line.trim();
-          if (!t.startsWith("data:")) continue;
-          const json = t.slice(5).trim();
-          if (json === "[DONE]") break;
-          try { const delta = JSON.parse(json).choices?.[0]?.delta?.content ?? ""; if (delta) { accumulated += delta; setAiDraft(accumulated); } } catch {}
-        }
-      }
     } catch (e: unknown) {
       if (e instanceof Error && e.name !== "AbortError") setAiDraft("（请求出错，请检查模型设置）");
     } finally { setAiStreaming(false); }

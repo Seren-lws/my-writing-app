@@ -46,6 +46,7 @@ export default function ModelSettingsPage() {
             <label className={labelClass}>API URL</label>
             <input type="url" value={settings.baseUrl} onChange={e => set("baseUrl", e.target.value)}
               placeholder="https://your-proxy.example.com/v1" className={inputClass} />
+            <p className="mt-2 text-xs text-[#8a6040]">填入到 /v1 结尾的完整地址，例如：https://yunwu.ai/v1</p>
           </div>
           <div className={cardClass}>
             <label className={labelClass}>API Key</label>
