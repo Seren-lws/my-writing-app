@@ -16,21 +16,22 @@ type Chapter = {
 
 type Message = { role: "user" | "assistant"; content: string };
 
-function buildAdvisorPrompt(
+// ── Context sections (for preview + prompt building) ──────────────────────
+
+type ContextSection = { label: string; icon: string; content: string };
+
+function buildContextSections(
   bookId: string,
   chapters: Chapter[],
   activeChapterId: string,
-): string {
-  let dna = "";
-  let soul = "";
-  let characters: Record<string, string>[] = [];
-  let adultSettings = "";
-
+): ContextSection[] {
+  // 1. Writing DNA
+  let dnaText = "";
   try {
     const raw = localStorage.getItem("writing-dna");
     if (raw) {
       const d = JSON.parse(raw);
-      dna = [
+      dnaText = [
         d.languageStyle && `语言风格：${d.languageStyle}`,
         d.writingPrefs && `写作偏好：${d.writingPrefs}`,
         d.taboos && `禁忌：${d.taboos}`,
@@ -42,6 +43,8 @@ function buildAdvisorPrompt(
     }
   } catch {}
 
+  // 2. Soul card
+  let soulText = "";
   try {
     const raw = localStorage.getItem("book-souls");
     if (raw) {
@@ -50,7 +53,7 @@ function buildAdvisorPrompt(
         ? souls.find((x: Record<string, string>) => x.bookId === bookId)
         : null;
       if (s) {
-        soul = [
+        soulText = [
           s.tone && `基调：${s.tone}`,
           s.dynamics && `人物动力：${s.dynamics}`,
           s.worldbuilding && `世界观：${s.worldbuilding}`,
@@ -64,16 +67,78 @@ function buildAdvisorPrompt(
     }
   } catch {}
 
+  // 3. Characters
+  let characters: Record<string, string>[] = [];
   try {
     const raw = localStorage.getItem("book-characters");
     if (raw) {
       const all = JSON.parse(raw);
-      characters = all.filter(
-        (c: Record<string, string>) => c.bookId === bookId,
-      );
+      characters = all.filter((c: Record<string, string>) => c.bookId === bookId);
     }
   } catch {}
+  const charText = characters.length > 0
+    ? characters
+        .map((c) =>
+          [
+            `• ${c.name}${c.alias ? `（${c.alias}）` : ""}${c.role ? ` ［${c.role}］` : ""}`,
+            c.age || c.gender
+              ? `  ${[c.age && `${c.age}岁`, c.gender].filter(Boolean).join("·")}`
+              : "",
+            c.personality ? `  性格：${c.personality}` : "",
+            c.speechPattern ? `  说话方式：${c.speechPattern}` : "",
+            c.aiNotes ? `  AI备注：${c.aiNotes}` : "",
+          ]
+            .filter(Boolean)
+            .join("\n"),
+        )
+        .join("\n\n")
+    : "";
 
+  // 4. Current chapter
+  const bookChapters = chapters.filter((c) => c.bookId === bookId);
+  const activeIdx = bookChapters.findIndex((c) => c.id === activeChapterId);
+  const cur = bookChapters[activeIdx];
+  let curText = "";
+  if (cur) {
+    curText = `标题：${cur.title || "（未命名）"}`;
+    if (cur.outline) curText += `\n大纲：${cur.outline}`;
+    if (cur.content) {
+      const preview = cur.content.slice(0, 200);
+      curText += `\n正文前 200 字：\n${preview}${cur.content.length > 200 ? "…（共 " + cur.content.replace(/\s/g, "").length + " 字）" : ""}`;
+    } else {
+      curText += "\n正文：（暂无）";
+    }
+  }
+
+  // 5. Recent chapters (up to 2 before current)
+  const recentList = bookChapters.slice(Math.max(0, activeIdx - 2), activeIdx);
+  const recentText = recentList.length > 0
+    ? recentList
+        .map((c) => {
+          const preview = c.content.slice(0, 120);
+          return `【${c.title || "未命名"}】\n${preview}${c.content.length > 120 ? "…（共 " + c.content.replace(/\s/g, "").length + " 字）" : "（共 " + c.content.replace(/\s/g, "").length + " 字）"}`;
+        })
+        .join("\n\n")
+    : "";
+
+  return [
+    { label: "写作 DNA", icon: "🧬", content: dnaText },
+    { label: "书籍灵魂卡", icon: "🪬", content: soulText },
+    { label: "人物档案", icon: "👥", content: charText },
+    { label: "当前章节", icon: "📄", content: curText },
+    { label: "近期章节（传入上文）", icon: "📜", content: recentText },
+  ];
+}
+
+function buildAdvisorPrompt(
+  bookId: string,
+  chapters: Chapter[],
+  activeChapterId: string,
+): string {
+  const sections = buildContextSections(bookId, chapters, activeChapterId);
+  const [dna, soul, chars, cur, recent] = sections.map((s) => s.content);
+
+  let adultSettings = "";
   try {
     const raw = localStorage.getItem(`adult-settings-${bookId}`);
     if (raw) {
@@ -90,6 +155,7 @@ function buildAdvisorPrompt(
 
   const bookChapters = chapters.filter((c) => c.bookId === bookId);
   const activeIdx = bookChapters.findIndex((c) => c.id === activeChapterId);
+  const currentChapter = bookChapters[activeIdx];
 
   const chapterMap = bookChapters
     .map(
@@ -97,13 +163,6 @@ function buildAdvisorPrompt(
         `第${i + 1}章《${c.title || "未命名"}》${c.outline ? `\n  大纲：${c.outline}` : ""}`,
     )
     .join("\n");
-
-  const recentChapters = bookChapters
-    .slice(Math.max(0, activeIdx - 2), activeIdx)
-    .map((c) => `【${c.title}】\n${c.content}`)
-    .join("\n\n---\n\n");
-
-  const currentChapter = bookChapters[activeIdx];
 
   let prompt =
     `你是这本书的写作军师，深度了解这本书的一切，帮助作者策划剧情、构建结构、分析人物、触发灵感。` +
@@ -113,26 +172,36 @@ function buildAdvisorPrompt(
   if (dna) prompt += `\n\n## 作者写作风格\n${dna}`;
   if (adultSettings) prompt += `\n\n## 作品设定\n${adultSettings}`;
 
-  if (characters.length > 0) {
-    prompt += `\n\n## 人物档案`;
-    for (const ch of characters) {
-      prompt += `\n\n### ${ch.name}${ch.alias ? `（${ch.alias}）` : ""}`;
-      if (ch.role) prompt += `\n角色定位：${ch.role}`;
-      if (ch.age || ch.gender)
-        prompt += `\n基本信息：${[ch.age && `${ch.age}岁`, ch.gender].filter(Boolean).join("，")}`;
-      if (ch.appearance) prompt += `\n外貌：${ch.appearance}`;
-      if (ch.personality) prompt += `\n性格：${ch.personality}`;
-      if (ch.personalityOrigin)
-        prompt += `\n性格形成原因：${ch.personalityOrigin}`;
-      if (ch.background) prompt += `\n成长背景：${ch.background}`;
-      if (ch.relationships) prompt += `\n关系网络：${ch.relationships}`;
-      if (ch.speechPattern) prompt += `\n说话方式：${ch.speechPattern}`;
-      if (ch.aiNotes) prompt += `\n给AI的特别说明：${ch.aiNotes}`;
+  if (chars) {
+    // Re-read full character data for the complete prompt
+    let fullChars: Record<string, string>[] = [];
+    try {
+      const raw = localStorage.getItem("book-characters");
+      if (raw) {
+        const all = JSON.parse(raw);
+        fullChars = all.filter((c: Record<string, string>) => c.bookId === bookId);
+      }
+    } catch {}
+    if (fullChars.length > 0) {
+      prompt += `\n\n## 人物档案`;
+      for (const ch of fullChars) {
+        prompt += `\n\n### ${ch.name}${ch.alias ? `（${ch.alias}）` : ""}`;
+        if (ch.role) prompt += `\n角色定位：${ch.role}`;
+        if (ch.age || ch.gender)
+          prompt += `\n基本信息：${[ch.age && `${ch.age}岁`, ch.gender].filter(Boolean).join("，")}`;
+        if (ch.appearance) prompt += `\n外貌：${ch.appearance}`;
+        if (ch.personality) prompt += `\n性格：${ch.personality}`;
+        if (ch.personalityOrigin) prompt += `\n性格形成原因：${ch.personalityOrigin}`;
+        if (ch.background) prompt += `\n成长背景：${ch.background}`;
+        if (ch.relationships) prompt += `\n关系网络：${ch.relationships}`;
+        if (ch.speechPattern) prompt += `\n说话方式：${ch.speechPattern}`;
+        if (ch.aiNotes) prompt += `\n给AI的特别说明：${ch.aiNotes}`;
+      }
     }
   }
 
   if (chapterMap) prompt += `\n\n## 全书章节目录\n${chapterMap}`;
-  if (recentChapters) prompt += `\n\n## 近期章节正文\n${recentChapters}`;
+  if (recent) prompt += `\n\n## 近期章节正文\n${recent}`;
   if (currentChapter) {
     prompt += `\n\n## 当前章节《${currentChapter.title}》`;
     if (currentChapter.outline) prompt += `\n大纲：${currentChapter.outline}`;
@@ -159,6 +228,8 @@ export default function AdvisorPanel({
   const [streaming, setStreaming] = useState(false);
   const [modelOptions, setModelOptions] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
+  const [showContext, setShowContext] = useState(false);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -255,6 +326,12 @@ export default function AdvisorPanel({
     saveMessages([]);
   }
 
+  const contextSections = buildContextSections(bookId, chapters, activeChapterId);
+
+  function toggleSection(label: string) {
+    setOpenSections((prev) => ({ ...prev, [label]: !prev[label] }));
+  }
+
   return (
     <div className="flex h-full flex-col bg-[#261609]">
       {/* Toolbar */}
@@ -266,19 +343,22 @@ export default function AdvisorPanel({
               value={selectedModel}
               onChange={(e) => {
                 setSelectedModel(e.target.value);
-                try {
-                  localStorage.setItem(modelKey, e.target.value);
-                } catch {}
+                try { localStorage.setItem(modelKey, e.target.value); } catch {}
               }}
               className="rounded-lg border border-[#6a4020] bg-[#311d0c] px-2 py-1 text-xs text-[#c8a878] outline-none"
             >
               {modelOptions.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
+                <option key={m} value={m}>{m}</option>
               ))}
             </select>
           )}
+          <button
+            onClick={() => setShowContext((v) => !v)}
+            title="查看本次注入的上下文"
+            className={`text-xs transition ${showContext ? "text-[#d4a05a]" : "text-[#8a6040] hover:text-[#c8a878]"}`}
+          >
+            {showContext ? "收起上下文 ↑" : "上下文预览"}
+          </button>
           <button
             onClick={handleClear}
             className="text-xs text-[#8a6040] transition hover:text-[#c8a878]"
@@ -287,6 +367,43 @@ export default function AdvisorPanel({
           </button>
         </div>
       </div>
+
+      {/* Context preview panel */}
+      {showContext && (
+        <div className="shrink-0 overflow-y-auto border-b border-[#4c2c14] bg-[#1c1006]" style={{ maxHeight: "55%" }}>
+          <div className="px-4 py-3 space-y-1.5">
+            <p className="mb-2 text-[10px] tracking-widest text-[#6a4020] uppercase">AI 读取的上下文（与实际发送一致）</p>
+            {contextSections.map(({ label, icon, content }) => {
+              const isOpen = !!openSections[label];
+              const isEmpty = !content.trim();
+              return (
+                <div key={label} className="rounded-xl border border-[#3a2010] bg-[#261609] overflow-hidden">
+                  <button
+                    onClick={() => !isEmpty && toggleSection(label)}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left transition ${isEmpty ? "cursor-default" : "hover:bg-[#311d0c]"}`}
+                  >
+                    <span className="text-sm">{icon}</span>
+                    <span className="flex-1 text-xs font-medium text-[#c8a878]">{label}</span>
+                    {isEmpty ? (
+                      <span className="text-[10px] text-[#4a2c10] rounded-full border border-[#3a2010] px-2 py-0.5">未填写</span>
+                    ) : (
+                      <span className="text-[10px] text-[#6a8040] rounded-full border border-[#3a4010] px-2 py-0.5">已注入</span>
+                    )}
+                    {!isEmpty && (
+                      <span className="text-[#6a4020] text-xs ml-1">{isOpen ? "▲" : "▼"}</span>
+                    )}
+                  </button>
+                  {isOpen && !isEmpty && (
+                    <div className="border-t border-[#3a2010] px-3 py-2.5">
+                      <pre className="whitespace-pre-wrap font-sans text-xs leading-5 text-[#b89060]">{content}</pre>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
