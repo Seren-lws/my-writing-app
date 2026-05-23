@@ -100,8 +100,17 @@ function buildSystemPrompt(params: { pov: string; style: string; detail: string;
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
-function FavoriteCard({ fav, onDelete }: { fav: TransformFavorite; onDelete: (id: string) => void }) {
+function FavoriteCard({
+  fav,
+  onDelete,
+  onReuse,
+}: {
+  fav: TransformFavorite;
+  onDelete: (id: string) => void;
+  onReuse: (fav: TransformFavorite) => void;
+}) {
   const [expanded, setExpanded] = useState(false);
+  const [showDialogue, setShowDialogue] = useState(false);
   const [copyMsg, setCopyMsg] = useState("");
 
   async function handleCopy() {
@@ -143,6 +152,16 @@ function FavoriteCard({ fav, onDelete }: { fav: TransformFavorite; onDelete: (id
           )}
         </div>
 
+        {/* Source dialogue (collapsible) */}
+        {showDialogue && (
+          <div className="mb-3 rounded-xl border border-[#3a2010] bg-[#1a0e04] px-4 py-3">
+            <p className="mb-1.5 text-[10px] tracking-wide text-[#6a4020] uppercase">原始对话</p>
+            <pre className="whitespace-pre-wrap font-sans text-xs leading-6 text-[#9a7050]">
+              {fav.sourceDialogue || "（无）"}
+            </pre>
+          </div>
+        )}
+
         {/* Output preview / full */}
         <div className="rounded-xl bg-[#1e1200] px-4 py-3">
           <pre className="whitespace-pre-wrap font-sans text-sm leading-7 text-[#d4b890]">
@@ -160,13 +179,25 @@ function FavoriteCard({ fav, onDelete }: { fav: TransformFavorite; onDelete: (id
           onClick={() => setExpanded(v => !v)}
           className="rounded-full border border-[#6a4020] px-4 py-1.5 text-xs text-[#c8a878] transition hover:bg-[#311d0c]"
         >
-          {expanded ? "收起" : "查看全文"}
+          {expanded ? "收起全文" : "查看全文"}
+        </button>
+        <button
+          onClick={() => setShowDialogue(v => !v)}
+          className="rounded-full border border-[#6a4020] px-4 py-1.5 text-xs text-[#c8a878] transition hover:bg-[#311d0c]"
+        >
+          {showDialogue ? "收起对话" : "查看原始对话"}
         </button>
         <button
           onClick={handleCopy}
           className="rounded-full border border-[#6a4020] px-4 py-1.5 text-xs text-[#d4a05a] transition hover:bg-[#311d0c]"
         >
           {copyMsg || "复制全文"}
+        </button>
+        <button
+          onClick={() => onReuse(fav)}
+          className="rounded-full border border-[#5a4020] bg-[#311d0c] px-4 py-1.5 text-xs text-[#d4a05a] transition hover:bg-[#4c2c14]"
+        >
+          再次炼字 ↑
         </button>
         <button
           onClick={handleDelete}
@@ -194,8 +225,10 @@ export default function TransformPage() {
   const [selectedModel, setSelectedModel] = useState("");
   const [copyMsg, setCopyMsg] = useState("");
   const [favMsg, setFavMsg] = useState("");
+  const [loadMsg, setLoadMsg] = useState("");
   const [favorites, setFavorites] = useState<TransformFavorite[]>([]);
   const abortRef = useRef<AbortController | null>(null);
+  const dialogueSectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     try {
@@ -274,6 +307,28 @@ export default function TransformPage() {
     saveFavorites(updated);
   }
 
+  function handleReuse(fav: TransformFavorite) {
+    setDialogue(fav.sourceDialogue);
+    setPov(fav.pov);
+    setStyle(fav.style);
+    setDetail(fav.detail);
+    setCustom(fav.custom);
+    // Only restore model if it exists in the current options list
+    if (fav.model && modelOptions.includes(fav.model)) {
+      setSelectedModel(fav.model);
+    }
+    // Clear previous result
+    setOutput("");
+    setError("");
+    setCopyMsg("");
+    setFavMsg("");
+    // Feedback message
+    setLoadMsg("已载入，可重新炼字 ✓");
+    setTimeout(() => setLoadMsg(""), 3000);
+    // Scroll to input area
+    dialogueSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   // ── UI ──
 
   const selectClass = "w-full rounded-xl border border-[#4c2c14] bg-[#311d0c] px-3 py-2 text-sm text-[#f0e6d3] outline-none focus:border-[#c8a060] transition cursor-pointer";
@@ -289,7 +344,12 @@ export default function TransformPage() {
         </header>
 
         {/* Input */}
-        <section>
+        <section ref={dialogueSectionRef}>
+          {loadMsg && (
+            <div className="mb-3 rounded-xl border border-[#5a4010] bg-[#1e1500] px-4 py-2.5 text-sm text-[#c8a878]">
+              {loadMsg}
+            </div>
+          )}
           <div className="mb-2 flex items-center justify-between">
             <label className="text-sm font-medium text-[#d4a05a]">原始对话</label>
             {dialogue.replace(/\s/g, "").length > 0 && (
@@ -421,7 +481,7 @@ export default function TransformPage() {
           ) : (
             <div className="space-y-4">
               {favorites.map(fav => (
-                <FavoriteCard key={fav.id} fav={fav} onDelete={handleDeleteFavorite} />
+                <FavoriteCard key={fav.id} fav={fav} onDelete={handleDeleteFavorite} onReuse={handleReuse} />
               ))}
             </div>
           )}
