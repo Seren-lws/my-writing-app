@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import AdvisorPanel from "../components/AdvisorPanel";
 import { normalizeBaseUrl, streamChat, chatCompletion } from "../lib/aiClient";
+import ChapterSidebar from "./components/ChapterSidebar";
+import FindReplaceBar from "./components/FindReplaceBar";
+import QuickNoteBox from "./components/QuickNoteBox";
+import AnalysisPanel from "./components/AnalysisPanel";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -319,6 +323,16 @@ export default function WritePage() {
     if (matches.length > 0) setTimeout(() => jumpToMatch(matches, 0), 50);
   }
 
+  function handleToggleCaseSensitive(v: boolean) {
+    setFindCaseSensitive(v);
+    handleFindOption(v, findUseRegex);
+  }
+
+  function handleToggleRegex(v: boolean) {
+    setFindUseRegex(v);
+    handleFindOption(findCaseSensitive, v);
+  }
+
   // ── Text analysis ─────────────────────────────────────────────────────────
 
   function handleRepeatAnalysis() {
@@ -421,112 +435,6 @@ export default function WritePage() {
   }
 
   if (!ready) return null;
-
-  // ── Find bar ──────────────────────────────────────────────────────────────
-
-  const FindBar = showFind && (
-    <div className="shrink-0 border-b border-[#4c2c14] bg-[#261609] px-4 py-2 space-y-1.5">
-      <div className="flex items-center gap-2">
-        <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-[#6a4020] bg-[#311d0c] px-3 py-1.5">
-          <input
-            ref={findInputRef}
-            type="text"
-            value={findQuery}
-            onChange={(e) => handleFindQueryChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") { e.shiftKey ? handleFindPrev() : handleFindNext(); }
-              if (e.key === "Escape") setShowFind(false);
-            }}
-            placeholder="查找…"
-            className="flex-1 bg-transparent text-sm text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
-          />
-          <button
-            title="区分大小写"
-            onClick={() => { const nc = !findCaseSensitive; setFindCaseSensitive(nc); handleFindOption(nc, findUseRegex); }}
-            className={`rounded px-1.5 py-0.5 text-xs font-mono transition ${findCaseSensitive ? "bg-[#6e4b2d] text-amber-50" : "text-[#8a6040] hover:text-[#c8a878]"}`}>
-            Aa
-          </button>
-          <button
-            title="正则表达式"
-            onClick={() => { const nr = !findUseRegex; setFindUseRegex(nr); handleFindOption(findCaseSensitive, nr); }}
-            className={`rounded px-1.5 py-0.5 text-xs font-mono transition ${findUseRegex ? "bg-[#6e4b2d] text-amber-50" : "text-[#8a6040] hover:text-[#c8a878]"}`}>
-            .*
-          </button>
-        </div>
-        <span className="shrink-0 min-w-[40px] text-center text-xs text-[#8a6040]">
-          {findMatches.length > 0 ? `${findMatchIdx + 1}/${findMatches.length}` : findQuery ? "0 个" : ""}
-        </span>
-        <button onClick={handleFindPrev} disabled={!findMatches.length} className="rounded px-2 py-1 text-[#c8a878] hover:bg-[#4c2c14] disabled:opacity-30 text-sm">↑</button>
-        <button onClick={handleFindNext} disabled={!findMatches.length} className="rounded px-2 py-1 text-[#c8a878] hover:bg-[#4c2c14] disabled:opacity-30 text-sm">↓</button>
-        <button onClick={() => setShowFind(false)} className="rounded px-2 py-1 text-[#8a6040] hover:text-[#c8a878] text-sm">✕</button>
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="flex flex-1 items-center rounded-xl border border-[#4c2c14] bg-[#311d0c] px-3 py-1.5">
-          <input
-            type="text"
-            value={replaceQuery}
-            onChange={(e) => setReplaceQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleReplace(); }}
-            placeholder="替换为…"
-            className="flex-1 bg-transparent text-sm text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
-          />
-        </div>
-        <button onClick={handleReplace} disabled={!findMatches.length}
-          className="rounded-lg border border-[#6a4020] px-3 py-1.5 text-xs text-[#c8a878] transition hover:bg-[#311d0c] disabled:opacity-30">替换</button>
-        <button onClick={handleReplaceAll} disabled={!findMatches.length}
-          className="rounded-lg border border-[#6a4020] px-3 py-1.5 text-xs text-[#c8a878] transition hover:bg-[#311d0c] disabled:opacity-30">全替换</button>
-      </div>
-    </div>
-  );
-
-  // ── Analysis panel (shared between mobile + desktop) ──────────────────────
-
-  const AnalysisResults = (
-    <>
-      {analysisMode === "repeat" && (
-        <div className="mt-3">
-          {repeatWords.length > 0 ? (
-            <>
-              <p className="mb-2 text-xs text-[#8a6040]">点击词语可在编辑器中定位</p>
-              <div className="flex flex-wrap gap-1.5">
-                {repeatWords.map(({ word, count }) => (
-                  <button key={word} onClick={() => openFindWith(word)}
-                    className="rounded-full border border-[#6a4020] bg-[#311d0c] px-2.5 py-1 text-xs text-[#d4a05a] transition hover:bg-[#4c2c14]">
-                    {word} <span className="text-[#8a6040]">×{count}</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p className="text-xs text-[#8a6040]">未发现明显重复词（≥3次）</p>
-          )}
-        </div>
-      )}
-      {analysisMode === "ai" && (
-        <div className="mt-3">
-          {aiAnalyzing && <p className="text-xs text-[#8a6040] animate-pulse">AI 正在分析…</p>}
-          {!aiAnalyzing && aiIssues.length === 0 && <p className="text-xs text-[#8a6040]">未发现明显问题</p>}
-          {aiIssues.length > 0 && (
-            <div className="space-y-2">
-              {aiIssues.map((issue, i) => (
-                <div key={i} className="rounded-xl border border-[#4c2c14] bg-[#311d0c] p-3">
-                  <div className="mb-1.5 flex items-center gap-2">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${issue.type === "typo" ? "bg-red-950/50 text-red-400" : "bg-[#1e1500] text-[#c8a060]"}`}>
-                      {issue.type === "typo" ? "错别字" : "AI味"}
-                    </span>
-                    <button onClick={() => openFindWith(issue.text.slice(0, 12))}
-                      className="text-[10px] text-[#8a6040] underline underline-offset-2 hover:text-[#c8a878]">定位</button>
-                  </div>
-                  <p className="text-xs text-[#f0e6d3] leading-5">「{issue.text}」</p>
-                  <p className="mt-1 text-xs text-[#8a6040] leading-5">{issue.suggestion}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </>
-  );
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -635,17 +543,15 @@ export default function WritePage() {
               {/* Analysis */}
               <div className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-4">
                 <p className="mb-3 text-xs font-medium text-[#c8a878]">文本检测</p>
-                <div className="flex gap-2">
-                  <button onClick={handleRepeatAnalysis}
-                    className={`flex-1 rounded-xl border py-2 text-xs transition ${analysisMode === "repeat" ? "border-[#6e4b2d] bg-[#6e4b2d] text-amber-50" : "border-[#6a4020] text-[#c8a878] hover:bg-[#311d0c]"}`}>
-                    重复词
-                  </button>
-                  <button onClick={handleAIAnalysis}
-                    className={`flex-1 rounded-xl border py-2 text-xs transition ${analysisMode === "ai" ? "border-[#6e4b2d] bg-[#6e4b2d] text-amber-50" : "border-[#6a4020] text-[#c8a878] hover:bg-[#311d0c]"}`}>
-                    {aiAnalyzing ? "检测中…" : "AI 检测"}
-                  </button>
-                </div>
-                {AnalysisResults}
+                <AnalysisPanel
+                  analysisMode={analysisMode}
+                  repeatWords={repeatWords}
+                  aiIssues={aiIssues}
+                  aiAnalyzing={aiAnalyzing}
+                  onRepeatAnalysis={handleRepeatAnalysis}
+                  onAIAnalysis={handleAIAnalysis}
+                  onLocate={openFindWith}
+                />
               </div>
             </div>
           )}
@@ -673,48 +579,38 @@ export default function WritePage() {
       {/* ── Desktop 3-column ───────────────────────────────────────────────── */}
       <div className={`hidden flex-1 md:grid md:overflow-hidden ${leftOpen ? "md:grid-cols-[220px_1fr_420px]" : "md:grid-cols-[28px_1fr_420px]"}`}>
         {/* Left sidebar */}
-        <aside className={`flex flex-col border-r border-[#4c2c14] bg-[#261609] overflow-hidden ${leftOpen ? "p-5" : "items-center pt-4"}`}>
-          {leftOpen ? (
-            <>
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm font-medium text-[#c8a878]">章节</p>
-                <button
-                  onClick={() => setLeftOpen(false)}
-                  title="收起"
-                  className="rounded-lg px-2 py-1 text-xs text-[#8a6040] transition hover:bg-[#311d0c] hover:text-[#c8a878]"
-                >‹</button>
-              </div>
-              <div className="flex-1 space-y-1.5 overflow-y-auto">
-                {bookChapters.map((ch) => (
-                  <button key={ch.id} onClick={() => handleSwitchChapter(ch.id)}
-                    className={`w-full rounded-xl px-4 py-3 text-left text-sm transition ${ch.id === activeChapterId ? "bg-[#4c2c14] text-[#f0e6d3] shadow-sm" : "text-[#c8a878] hover:bg-[#311d0c]"}`}>
-                    <span className="block truncate">{ch.title || "未命名章节"}</span>
-                    <span className="mt-0.5 block text-xs text-[#8a6040]">{ch.content.replace(/\s/g, "").length} 字</span>
-                  </button>
-                ))}
-              </div>
-              <button onClick={handleAddChapter}
-                className="mt-4 w-full rounded-xl border border-dashed border-[#6a4020] px-4 py-2.5 text-sm text-[#c8a878] transition hover:bg-[#311d0c]">+ 新章节</button>
-              <Link href={`/book-soul?bookId=${activeBookId}`}
-                className="mt-2 flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#c8a878] transition hover:bg-[#311d0c]">
-                <span>🪬</span><span>书籍灵魂卡</span>
-              </Link>
-            </>
-          ) : (
-            <button
-              onClick={() => setLeftOpen(true)}
-              title="展开章节列表"
-              className="flex flex-col items-center gap-2 text-[#8a6040] transition hover:text-[#c8a878]"
-            >
-              <span className="text-base leading-none">›</span>
-              <span className="text-[10px] [writing-mode:vertical-rl]">章节</span>
-            </button>
-          )}
-        </aside>
+        <ChapterSidebar
+          bookChapters={bookChapters}
+          activeChapterId={activeChapterId}
+          activeBookId={activeBookId}
+          leftOpen={leftOpen}
+          onSwitchChapter={handleSwitchChapter}
+          onAddChapter={handleAddChapter}
+          onToggle={setLeftOpen}
+        />
 
         {/* Main editor */}
         <section className="flex flex-col overflow-hidden">
-          {FindBar}
+          {showFind && (
+            <FindReplaceBar
+              findQuery={findQuery}
+              replaceQuery={replaceQuery}
+              findCaseSensitive={findCaseSensitive}
+              findUseRegex={findUseRegex}
+              findMatches={findMatches}
+              findMatchIdx={findMatchIdx}
+              findInputRef={findInputRef}
+              onQueryChange={handleFindQueryChange}
+              onReplaceChange={setReplaceQuery}
+              onToggleCaseSensitive={handleToggleCaseSensitive}
+              onToggleRegex={handleToggleRegex}
+              onFindNext={handleFindNext}
+              onFindPrev={handleFindPrev}
+              onReplace={handleReplace}
+              onReplaceAll={handleReplaceAll}
+              onClose={() => setShowFind(false)}
+            />
+          )}
           <div className="flex-1 overflow-auto px-12 py-10">
             <div className="mx-auto max-w-3xl rounded-[1.5rem] border border-[#4c2c14] bg-[#261609] p-8 shadow-sm">
               <textarea
@@ -747,20 +643,12 @@ export default function WritePage() {
         {/* Right sidebar */}
         <aside className="flex flex-col gap-5 overflow-y-auto border-l border-[#4c2c14] bg-[#261609] p-5">
           {/* Quick note */}
-          <section>
-            <p className="mb-4 text-sm font-medium text-[#c8a878]">速记灵感</p>
-            <div className="rounded-2xl border border-[#5a4010] bg-[#1e1500] p-4 shadow-sm">
-              <textarea value={quickNote} onChange={(e) => setQuickNote(e.target.value)}
-                className="min-h-24 w-full resize-none bg-transparent text-sm leading-6 text-[#e8d5b7] outline-none placeholder:text-[#5a3820]"
-                placeholder="突然想到的台词、伏笔、梗、画面……先丢这里。" />
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-xs text-[#8a6040]">{quickNote.trim().length} 字</span>
-                <button onClick={saveQuickNote} className="rounded-full bg-[#6e4b2d] px-4 py-1.5 text-xs text-amber-50 transition hover:bg-[#58391f]">贴到灵感墙</button>
-              </div>
-              {noteSavedMessage && <p className="mt-3 text-xs text-[#c8a878]">{noteSavedMessage}</p>}
-            </div>
-            <Link href="/inspirations" className="mt-3 inline-block text-xs text-[#8a6040] underline underline-offset-4">查看全部灵感 →</Link>
-          </section>
+          <QuickNoteBox
+            value={quickNote}
+            savedMessage={noteSavedMessage}
+            onChange={setQuickNote}
+            onSave={saveQuickNote}
+          />
 
           {/* AI writing */}
           <section>
@@ -811,17 +699,15 @@ export default function WritePage() {
           {/* Text analysis */}
           <section>
             <p className="mb-3 text-sm font-medium text-[#c8a878]">文本检测</p>
-            <div className="flex gap-2">
-              <button onClick={handleRepeatAnalysis}
-                className={`flex-1 rounded-xl border py-2 text-xs transition ${analysisMode === "repeat" ? "border-[#6e4b2d] bg-[#6e4b2d] text-amber-50" : "border-[#6a4020] text-[#c8a878] hover:bg-[#311d0c]"}`}>
-                重复词
-              </button>
-              <button onClick={handleAIAnalysis}
-                className={`flex-1 rounded-xl border py-2 text-xs transition ${analysisMode === "ai" ? "border-[#6e4b2d] bg-[#6e4b2d] text-amber-50" : "border-[#6a4020] text-[#c8a878] hover:bg-[#311d0c]"}`}>
-                {aiAnalyzing ? "检测中…" : "AI 检测"}
-              </button>
-            </div>
-            {AnalysisResults}
+            <AnalysisPanel
+              analysisMode={analysisMode}
+              repeatWords={repeatWords}
+              aiIssues={aiIssues}
+              aiAnalyzing={aiAnalyzing}
+              onRepeatAnalysis={handleRepeatAnalysis}
+              onAIAnalysis={handleAIAnalysis}
+              onLocate={openFindWith}
+            />
           </section>
         </aside>
       </div>
