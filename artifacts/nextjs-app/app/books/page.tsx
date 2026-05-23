@@ -81,8 +81,13 @@ export default function BooksPage() {
 
         {/* Header */}
         <header className="mb-10">
-          <p className="text-xs tracking-[0.25em] text-[#9b744d]">MY WORKS</p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#f0e6d3]">我的作品库</h1>
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-xs tracking-[0.25em] text-[#9b744d]">MY WORKS</p>
+            <Link href="/" className="rounded-full border border-[#6a4020] px-4 py-1.5 text-sm text-[#c8a878] transition hover:bg-[#311d0c]">
+              ← 回到小屋
+            </Link>
+          </div>
+          <h1 className="text-3xl font-semibold text-[#f0e6d3]">我的作品库</h1>
           <p className="mt-2 text-sm text-[#c8a878]">
             {books.length > 0 ? `共 ${books.length} 部作品` : "还没有作品，新建第一本吧~"}
           </p>
@@ -95,8 +100,8 @@ export default function BooksPage() {
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
-            placeholder="输入新作品名称……"
-            className="flex-1 bg-transparent text-sm text-[#f0e6d3] outline-none placeholder:text-[#6a4020]"
+            placeholder="输入新作品名称，回车或点新建……"
+            className="flex-1 bg-transparent text-sm text-[#f0e6d3] outline-none placeholder:text-[#9b744d]"
           />
           <button
             onClick={handleCreate}
