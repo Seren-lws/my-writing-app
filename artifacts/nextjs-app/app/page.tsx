@@ -1,24 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
+import RainWindow from "./components/RainWindow";
 
 // Button positions tuned to desk2.png (941 × 1672)
-// Objects: calendar=upper-right, trophy=right-mid,
-//          notes-book=center, pen=center-right,
-//          sticky-notes=lower-left, robot=lower-center, envelope=lower-right
+// 我的作品 → bookshelf (top), 写作 → notebook center,
+// 日历 → calendar stand, 成绩 → trophy cup,
+// 灵感 → sticky notes cluster, 对话炼字 → robot, 读者来信 → envelope
 const DESK_LINKS = [
   {
     label: "我的作品",
     href: "/books",
-    top: "57%",
-    left: "46%",
+    top: "8%",
+    left: "50%",
     translate: "-50%, -50%",
     wide: true,
   },
   {
     label: "写作",
     href: "/write",
-    top: "66%",
-    left: "59%",
+    top: "62%",
+    left: "46%",
     translate: "-50%, -50%",
   },
   {
@@ -64,23 +65,40 @@ const SETTINGS_LINKS = [
   { label: "模型设置", href: "/model-settings" },
 ];
 
+// Shared overlay button style (works on both dark wood image and dark bg)
+const btnCls = (wide?: boolean) =>
+  [
+    "absolute rounded-xl border border-[#c8a060]/55 bg-[#fffaf0]/22 px-4 py-1.5",
+    "text-center text-sm font-semibold text-[#2a1205]",
+    "backdrop-blur-[2px] transition-all duration-200",
+    "hover:-translate-y-0.5 hover:border-[#c8a060] hover:bg-[#fffaf0]/80 hover:shadow-lg",
+    wide ? "min-w-[150px]" : "min-w-[72px]",
+  ].join(" ");
+
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#2a1608] text-[#f0e6d3] md:bg-[#f5f0e8] md:text-[#3d2b1a]">
+    // Mobile: dark wood bg; Desktop: rainy-night atmospheric dark
+    <main className="min-h-screen bg-[#2a1608] text-[#f0e6d3] md:bg-[#141e2c]">
 
-      {/* ── Desktop wrapper ── */}
-      <div className="hidden md:flex md:flex-col md:items-center md:py-8">
-        <header className="mb-5 text-center">
-          <p className="text-xs tracking-[0.25em] text-[#a07840]">
+      {/* Rain drops — desktop only, fixed full-screen */}
+      <RainWindow />
+
+      {/* ── Desktop layout ─────────────────────────────────────────────── */}
+      <div className="relative z-10 hidden md:flex md:flex-col md:items-center md:py-10">
+        <header className="mb-6 text-center">
+          <p className="text-xs tracking-[0.25em] text-[#6a8aa8]">
             SHENGSHENG WRITING ROOM
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[#3d2b1a]">
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[#e0ccaa]">
             声声的写作小屋
           </h1>
         </header>
 
-        {/* Image card */}
-        <div className="relative w-full max-w-[480px] overflow-hidden rounded-2xl shadow-2xl">
+        {/* Desk image card — warm glow on dark rainy bg */}
+        <div
+          className="relative w-full max-w-[480px] overflow-hidden rounded-2xl"
+          style={{ boxShadow: "0 12px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(200,160,80,0.15), 0 0 80px rgba(180,120,40,0.08)" }}
+        >
           <Image
             src="/desk2.png"
             alt="书桌"
@@ -94,38 +112,33 @@ export default function Home() {
               key={label}
               href={href}
               style={{ top, left, transform: `translate(${translate})` }}
-              className={[
-                "absolute rounded-xl border border-[#c8a060]/50 bg-[#fffaf0]/25 px-4 py-1.5",
-                "text-center text-sm font-semibold text-[#2a1205]",
-                "backdrop-blur-[2px] transition-all duration-200",
-                "hover:-translate-y-0.5 hover:border-[#c8a060] hover:bg-[#fffaf0]/80 hover:shadow-lg",
-                wide ? "min-w-[150px]" : "min-w-[72px]",
-              ].join(" ")}
+              className={btnCls(wide)}
             >
               {label}
             </Link>
           ))}
         </div>
 
-        <div className="mt-5 flex flex-wrap justify-center gap-3">
+        {/* Settings links */}
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           {SETTINGS_LINKS.map(({ label, href }) => (
             <Link
               key={label}
               href={href}
-              className="rounded-full border border-[#e0d4c0] bg-[#faf7f2] px-5 py-2 text-sm text-[#7c5038] transition hover:border-[#c8a87a] hover:text-[#3d2b1a]"
+              className="rounded-full border border-[#3a4e62]/80 bg-[#ffffff]/5 px-5 py-2 text-sm text-[#8aaabf] backdrop-blur-sm transition hover:border-[#6a8aa8] hover:bg-[#ffffff]/10 hover:text-[#c8d8e8]"
             >
               {label}
             </Link>
           ))}
         </div>
 
-        <p className="mt-5 mb-2 text-center text-xs text-[#9a7a58]">
+        <p className="mt-5 mb-2 text-center text-xs text-[#3a5068]">
           更好陪伴，更多趣味，更强动力。
         </p>
       </div>
 
-      {/* ── Mobile: full-screen image with overlays ── */}
-      <div className="relative md:hidden">
+      {/* ── Mobile layout: full-screen image with overlays ──────────────── */}
+      <div className="relative z-10 md:hidden">
         <Image
           src="/desk2.png"
           alt="书桌"
@@ -152,7 +165,7 @@ export default function Home() {
             href={href}
             style={{ top, left, transform: `translate(${translate})` }}
             className={[
-              "absolute rounded-xl border border-[#c8a060]/50 bg-[#fffaf0]/25 px-4 py-1.5",
+              "absolute rounded-xl border border-[#c8a060]/55 bg-[#fffaf0]/22 px-4 py-1.5",
               "text-center text-sm font-semibold text-[#2a1205]",
               "backdrop-blur-[2px] transition-all duration-200",
               "active:border-[#c8a060] active:bg-[#fffaf0]/80",
@@ -169,7 +182,7 @@ export default function Home() {
             <Link
               key={label}
               href={href}
-              className="rounded-full border border-[#c8a060]/50 bg-[#fffaf0]/30 px-4 py-1.5 text-xs font-medium text-[#2a1205] backdrop-blur-[2px] transition"
+              className="rounded-full border border-[#c8a060]/50 bg-[#fffaf0]/30 px-4 py-1.5 text-xs font-medium text-[#2a1205] backdrop-blur-[2px]"
             >
               {label}
             </Link>
