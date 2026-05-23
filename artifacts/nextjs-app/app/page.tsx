@@ -4,7 +4,7 @@ import Link from "next/link";
 const DESK_LINKS = [
   {
     label: "我的作品",
-    href: "/write",
+    href: "/books",
     top: "7%",
     left: "50%",
     translate: "-50%, 0",

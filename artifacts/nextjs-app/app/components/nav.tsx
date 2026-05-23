@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 const mainLinks = [
   { href: "/", label: "首页", icon: "🏠" },
+  { href: "/books", label: "作品库", icon: "📚" },
   { href: "/write", label: "写作", icon: "✍️" },
   { href: "/inspirations", label: "灵感收集", icon: "💡" },
   { href: "/calendar", label: "日历打卡", icon: "📅" },
