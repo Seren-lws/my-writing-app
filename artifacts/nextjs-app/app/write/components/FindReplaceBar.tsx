@@ -11,7 +11,7 @@ type Props = {
   findUseRegex: boolean;
   findMatches: Match[];
   findMatchIdx: number;
-  findInputRef: RefObject<HTMLInputElement>;
+  findInputRef: RefObject<HTMLInputElement | null>;
   onQueryChange: (q: string) => void;
   onReplaceChange: (q: string) => void;
   onToggleCaseSensitive: (v: boolean) => void;
