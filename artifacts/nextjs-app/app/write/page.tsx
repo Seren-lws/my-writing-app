@@ -8,20 +8,19 @@ import ChapterSidebar from "./components/ChapterSidebar";
 import FindReplaceBar from "./components/FindReplaceBar";
 import QuickNoteBox from "./components/QuickNoteBox";
 import AnalysisPanel from "./components/AnalysisPanel";
+import { useFindReplace } from "./hooks/useFindReplace";
+import { useAutoSave } from "./hooks/useAutoSave";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 type Book = { id: string; title: string; createdAt: string; updatedAt: string };
 type Chapter = { id: string; bookId: string; title: string; content: string; outline: string; aiInstruction: string; createdAt: string; updatedAt: string };
 type Inspiration = { id: string; content: string; createdAt: string };
-type SaveStatus = "idle" | "writing" | "saving" | "saved";
-type Match = { start: number; end: number };
 type AIIssue = { type: "typo" | "ai"; text: string; suggestion: string };
 
 // ── Storage helpers ────────────────────────────────────────────────────────
 
 function ts() { return new Date().toISOString(); }
-function formatTime(iso: string) { return new Date(iso).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }); }
 function loadBooks(): Book[] { try { const r = localStorage.getItem("books"); return r ? JSON.parse(r) : []; } catch { return []; } }
 function loadChapters(): Chapter[] { try { const r = localStorage.getItem("chapters"); return r ? JSON.parse(r) : []; } catch { return []; } }
 function persistBooks(b: Book[]) { localStorage.setItem("books", JSON.stringify(b)); }
@@ -60,24 +59,6 @@ function bootstrap(urlBookId: string): { books: Book[]; chapters: Chapter[]; act
   return { books, chapters, activeBookId: targetBookId };
 }
 
-// ── Find helper ────────────────────────────────────────────────────────────
-
-function computeMatches(query: string, text: string, caseSensitive: boolean, useRegex: boolean): Match[] {
-  if (!query) return [];
-  try {
-    const flags = caseSensitive ? "g" : "gi";
-    const pattern = useRegex ? query : query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const re = new RegExp(pattern, flags);
-    const matches: Match[] = [];
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      matches.push({ start: m.index, end: m.index + m[0].length });
-      if (m[0].length === 0) re.lastIndex++;
-    }
-    return matches;
-  } catch { return []; }
-}
-
 // ── Repeat word analysis ───────────────────────────────────────────────────
 
 function analyzeRepeatWords(text: string): { word: string; count: number }[] {
@@ -113,8 +94,6 @@ export default function WritePage() {
   const [activeChapterId, setActiveChapterId] = useState<string>("");
   const [quickNote, setQuickNote] = useState("");
   const [noteSavedMessage, setNoteSavedMessage] = useState("");
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
-  const [savedTime, setSavedTime] = useState("");
   const [ready, setReady] = useState(false);
   const [modelOptions, setModelOptions] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
@@ -124,25 +103,27 @@ export default function WritePage() {
   const [mobileTab, setMobileTab] = useState<"write" | "chapters" | "tools" | "advisor">("write");
   const [leftOpen, setLeftOpen] = useState(true);
 
-  // Find & Replace
-  const [showFind, setShowFind] = useState(false);
-  const [findQuery, setFindQuery] = useState("");
-  const [replaceQuery, setReplaceQuery] = useState("");
-  const [findCaseSensitive, setFindCaseSensitive] = useState(false);
-  const [findUseRegex, setFindUseRegex] = useState(false);
-  const [findMatches, setFindMatches] = useState<Match[]>([]);
-  const [findMatchIdx, setFindMatchIdx] = useState(0);
-
   // Analysis
   const [analysisMode, setAnalysisMode] = useState<"none" | "repeat" | "ai">("none");
   const [repeatWords, setRepeatWords] = useState<{ word: string; count: number }[]>([]);
   const [aiIssues, setAiIssues] = useState<AIIssue[]>([]);
   const [aiAnalyzing, setAiAnalyzing] = useState(false);
 
-  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiAbortRef = useRef<AbortController | null>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
-  const findInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Auto-save hook ────────────────────────────────────────────────────────
+
+  const {
+    saveStatus,
+    setSaveStatus,
+    scheduleAutoSave,
+    handleSave,
+    cancelPendingSave,
+    statusLabel,
+  } = useAutoSave(chapters);
+
+  // ── Derived values ────────────────────────────────────────────────────────
 
   const activeBook = books.find((b) => b.id === activeBookId) ?? null;
   const bookChapters = chapters.filter((c) => c.bookId === activeBookId);
@@ -151,6 +132,44 @@ export default function WritePage() {
   const wordCount = content.replace(/\s/g, "").length;
   const characterCount = content.length;
   const paragraphCount = content.split("\n").filter(Boolean).length;
+
+  // ── updateActiveChapter (memoized so useFindReplace always gets latest) ───
+
+  const updateActiveChapter = useCallback(
+    (patch: Partial<Pick<Chapter, "title" | "content" | "outline" | "aiInstruction">>) => {
+      const updated = chapters.map((c) => c.id === activeChapterId ? { ...c, ...patch, updatedAt: ts() } : c);
+      setChapters(updated);
+      setSaveStatus("writing");
+      scheduleAutoSave(updated);
+      return updated;
+    },
+    [chapters, activeChapterId, setSaveStatus, scheduleAutoSave]
+  );
+
+  // ── Find & Replace hook ───────────────────────────────────────────────────
+
+  const {
+    showFind,
+    setShowFind,
+    findQuery,
+    replaceQuery,
+    setReplaceQuery,
+    findCaseSensitive,
+    findUseRegex,
+    findMatches,
+    findMatchIdx,
+    findInputRef,
+    handleFindQueryChange,
+    handleFindNext,
+    handleFindPrev,
+    handleReplace,
+    handleReplaceAll,
+    openFindWith,
+    handleToggleCaseSensitive,
+    handleToggleRegex,
+  } = useFindReplace({ content, editorRef, updateActiveChapter });
+
+  // ── Init ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -175,30 +194,7 @@ export default function WritePage() {
     setReady(true);
   }, []);
 
-  // ── Save ──────────────────────────────────────────────────────────────────
-
-  const performSave = useCallback((updatedChapters: Chapter[]) => {
-    setSaveStatus("saving");
-    setTimeout(() => { persistChapters(updatedChapters); setSavedTime(formatTime(ts())); setSaveStatus("saved"); }, 400);
-  }, []);
-
-  const scheduleAutoSave = useCallback((updatedChapters: Chapter[]) => {
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => performSave(updatedChapters), 30000);
-  }, [performSave]);
-
-  function updateActiveChapter(patch: Partial<Pick<Chapter, "title" | "content" | "outline" | "aiInstruction">>) {
-    const updated = chapters.map((c) => c.id === activeChapterId ? { ...c, ...patch, updatedAt: ts() } : c);
-    setChapters(updated);
-    setSaveStatus("writing");
-    scheduleAutoSave(updated);
-    return updated;
-  }
-
-  function handleSave() {
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    performSave(chapters);
-  }
+  // ── Keyboard shortcuts (no deps — intentional, avoids stale closures) ─────
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -214,13 +210,11 @@ export default function WritePage() {
     return () => window.removeEventListener("keydown", onKeyDown);
   });
 
-  useEffect(() => { return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); }; }, []);
-
   // ── Chapter actions ───────────────────────────────────────────────────────
 
   function handleSwitchChapter(id: string) {
     if (id === activeChapterId) return;
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    cancelPendingSave();
     persistChapters(chapters);
     setActiveChapterId(id);
     setSaveStatus("idle");
@@ -248,89 +242,6 @@ export default function WritePage() {
     setQuickNote("");
     setNoteSavedMessage("已贴到灵感墙");
     window.setTimeout(() => setNoteSavedMessage(""), 1800);
-  }
-
-  // ── Find & Replace ────────────────────────────────────────────────────────
-
-  function jumpToMatch(matches: Match[], idx: number) {
-    const match = matches[idx];
-    if (!match || !editorRef.current) return;
-    editorRef.current.focus();
-    editorRef.current.setSelectionRange(match.start, match.end);
-    const linesBefore = content.slice(0, match.start).split("\n").length - 1;
-    editorRef.current.scrollTop = Math.max(0, linesBefore * 36 - 100);
-  }
-
-  function handleFindQueryChange(q: string) {
-    setFindQuery(q);
-    const matches = computeMatches(q, content, findCaseSensitive, findUseRegex);
-    setFindMatches(matches);
-    setFindMatchIdx(0);
-  }
-
-  function handleFindOption(cs: boolean, rx: boolean) {
-    const matches = computeMatches(findQuery, content, cs, rx);
-    setFindMatches(matches);
-    setFindMatchIdx(0);
-    if (matches.length > 0) jumpToMatch(matches, 0);
-  }
-
-  function handleFindNext() {
-    if (!findMatches.length) return;
-    const next = (findMatchIdx + 1) % findMatches.length;
-    setFindMatchIdx(next);
-    jumpToMatch(findMatches, next);
-  }
-
-  function handleFindPrev() {
-    if (!findMatches.length) return;
-    const prev = (findMatchIdx - 1 + findMatches.length) % findMatches.length;
-    setFindMatchIdx(prev);
-    jumpToMatch(findMatches, prev);
-  }
-
-  function handleReplace() {
-    if (!findMatches.length) return;
-    const match = findMatches[findMatchIdx];
-    const newContent = content.slice(0, match.start) + replaceQuery + content.slice(match.end);
-    updateActiveChapter({ content: newContent });
-    const newMatches = computeMatches(findQuery, newContent, findCaseSensitive, findUseRegex);
-    setFindMatches(newMatches);
-    const next = Math.min(findMatchIdx, newMatches.length - 1);
-    setFindMatchIdx(Math.max(0, next));
-  }
-
-  function handleReplaceAll() {
-    if (!findMatches.length) return;
-    let newContent = content;
-    let offset = 0;
-    for (const match of findMatches) {
-      const s = match.start + offset;
-      const e = match.end + offset;
-      newContent = newContent.slice(0, s) + replaceQuery + newContent.slice(e);
-      offset += replaceQuery.length - (match.end - match.start);
-    }
-    updateActiveChapter({ content: newContent });
-    setFindMatches([]);
-  }
-
-  function openFindWith(word: string) {
-    setFindQuery(word);
-    setShowFind(true);
-    const matches = computeMatches(word, content, false, false);
-    setFindMatches(matches);
-    setFindMatchIdx(0);
-    if (matches.length > 0) setTimeout(() => jumpToMatch(matches, 0), 50);
-  }
-
-  function handleToggleCaseSensitive(v: boolean) {
-    setFindCaseSensitive(v);
-    handleFindOption(v, findUseRegex);
-  }
-
-  function handleToggleRegex(v: boolean) {
-    setFindUseRegex(v);
-    handleFindOption(findCaseSensitive, v);
   }
 
   // ── Text analysis ─────────────────────────────────────────────────────────
@@ -425,13 +336,6 @@ export default function WritePage() {
     const sep = content.trim() ? "\n\n" : "";
     updateActiveChapter({ content: content + sep + aiDraft });
     setAiDraft("");
-  }
-
-  function statusLabel() {
-    if (saveStatus === "writing") return "正在写作";
-    if (saveStatus === "saving") return "自动保存中…";
-    if (saveStatus === "saved") return `已自动保存 ${savedTime}`;
-    return "";
   }
 
   if (!ready) return null;
