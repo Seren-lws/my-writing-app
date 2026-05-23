@@ -81,21 +81,20 @@ export default function Home() {
     <main className="min-h-screen bg-[#2a1608] text-[#f0e6d3]">
 
       {/* ── Desktop background: gothic rainy window ────────────────────── */}
-      <div className="fixed inset-0 z-0 hidden md:block">
-        <Image
-          src="/window-rain.png"
-          alt=""
-          fill
-          className="object-cover"
-          style={{ filter: "brightness(0.62) saturate(0.85)" }}
-          priority
-        />
-        {/* Frosted blur overlay */}
-        <div
-          className="absolute inset-0"
-          style={{ backdropFilter: "blur(3px)", background: "rgba(10,16,28,0.35)" }}
-        />
-      </div>
+      <div
+        className="fixed inset-0 z-0 hidden md:block"
+        style={{
+          backgroundImage: "url('/window-rain.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "brightness(0.58) saturate(0.8)",
+        }}
+      />
+      {/* Frosted blur overlay — desktop only */}
+      <div
+        className="fixed inset-0 z-[1] hidden md:block"
+        style={{ backdropFilter: "blur(4px)", background: "rgba(8,14,24,0.30)" }}
+      />
 
       {/* Rain drops — desktop only, fixed full-screen */}
       <RainWindow />
