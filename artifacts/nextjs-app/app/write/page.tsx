@@ -71,9 +71,6 @@ export default function WritePage() {
   const editorRef = useRef<HTMLTextAreaElement>(null);
 
   // Stable ref that bridges useBooksAndChapters ↔ useAutoSave.
-  // useBooksAndChapters is called first (to get `chapters`), useAutoSave second.
-  // The ref is updated every render after both hooks run, so by the time
-  // the user actually clicks a chapter the ref holds the correct callbacks.
   const afterSwitchRef = useRef<() => void>(() => {});
 
   // ── Books & Chapters hook ─────────────────────────────────────────────────
@@ -308,23 +305,23 @@ export default function WritePage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <main className="flex h-[100dvh] flex-col bg-[#1c1108] text-[#f0e6d3]">
+    <main className="flex h-[100dvh] flex-col bg-[#f5f0e8] text-[#3d2b1a]">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-[#4c2c14] bg-[#261609]/90 px-8 py-4 shadow-sm">
+      <header className="flex items-center justify-between border-b border-[#e0d4c0] bg-[#fdf9f4]/95 px-8 py-4 shadow-sm">
         <div className="flex items-center gap-4">
-          <Link href="/" className="rounded-full border border-[#6a4020] px-4 py-1.5 text-sm text-[#c8a878] transition hover:bg-[#311d0c]">← 回到小屋</Link>
+          <Link href="/" className="rounded-full border border-[#e0d4c0] px-4 py-1.5 text-sm text-[#7c5038] transition hover:bg-[#f0ead8]">← 回到小屋</Link>
           <div className="flex items-center gap-2">
-            {activeBook && <Link href="/" className="text-sm text-[#c8a878] transition hover:text-[#d4a05a]">{activeBook.title}</Link>}
-            {activeBook && <span className="text-[#6a4020]">/</span>}
+            {activeBook && <Link href="/" className="text-sm text-[#7c5038] transition hover:text-[#a07030]">{activeBook.title}</Link>}
+            {activeBook && <span className="text-[#c0a078]">/</span>}
             <input type="text" value={activeChapter?.title ?? ""} onChange={(e) => updateActiveChapter({ title: e.target.value })}
-              placeholder="章节标题" className="w-56 bg-transparent text-xl font-semibold text-[#f0e6d3] outline-none placeholder:text-[#5a3820]" />
+              placeholder="章节标题" className="w-56 bg-transparent text-xl font-semibold text-[#3d2b1a] outline-none placeholder:text-[#c0a078]" />
           </div>
         </div>
         <div className="flex items-center gap-4">
           {statusLabel() && (
-            <span className={`text-sm transition-opacity ${saveStatus === "saving" ? "animate-pulse text-[#d4a05a]" : "text-[#c8a878]"}`}>{statusLabel()}</span>
+            <span className={`text-sm transition-opacity ${saveStatus === "saving" ? "animate-pulse text-[#a07030]" : "text-[#7c5038]"}`}>{statusLabel()}</span>
           )}
-          <button onClick={handleSave} className="rounded-full bg-[#6e4b2d] px-5 py-2 text-sm text-amber-50 transition hover:bg-[#58391f]">保存</button>
+          <button onClick={handleSave} className="rounded-full bg-[#7c4f2a] px-5 py-2 text-sm text-amber-50 transition hover:bg-[#643e1f]">保存</button>
         </div>
       </header>
 
@@ -335,11 +332,11 @@ export default function WritePage() {
             <div className="flex h-full flex-col overflow-hidden">
               <div className="flex-1 overflow-auto px-4 py-6">
                 <textarea value={content} onChange={(e) => updateActiveChapter({ content: e.target.value })}
-                  className="min-h-[55vh] w-full resize-none bg-transparent text-base leading-8 text-[#e8d5b7] outline-none placeholder:text-[#5a3820]"
+                  className="min-h-[55vh] w-full resize-none bg-transparent text-base leading-8 text-[#3d2b1a] outline-none placeholder:text-[#c0a078]"
                   placeholder="从这里开始写吧……" />
               </div>
-              <div className="flex justify-center border-t border-[#4c2c14] bg-[#261609]/60 py-2">
-                <button onClick={() => setMobileTab("advisor")} className="rounded-full border border-[#6a4020] bg-[#311d0c] px-5 py-1.5 text-sm text-[#d4a05a] shadow-sm">问军师</button>
+              <div className="flex justify-center border-t border-[#e0d4c0] bg-[#fdf9f4]/60 py-2">
+                <button onClick={() => setMobileTab("advisor")} className="rounded-full border border-[#e0d4c0] bg-[#faf7f2] px-5 py-1.5 text-sm text-[#a07030] shadow-sm">问军师</button>
               </div>
             </div>
           )}
@@ -348,70 +345,70 @@ export default function WritePage() {
               <div className="flex-1 space-y-2 overflow-y-auto">
                 {bookChapters.map((ch) => (
                   <button key={ch.id} onClick={() => { handleSwitchChapter(ch.id); setMobileTab("write"); }}
-                    className={`w-full rounded-xl px-4 py-3 text-left text-sm transition ${ch.id === activeChapterId ? "bg-[#4c2c14] text-[#f0e6d3] shadow-sm" : "text-[#c8a878] hover:bg-[#311d0c]"}`}>
+                    className={`w-full rounded-xl px-4 py-3 text-left text-sm transition ${ch.id === activeChapterId ? "bg-[#f0ead8] text-[#3d2b1a] shadow-sm" : "text-[#7c5038] hover:bg-[#f0ead8]"}`}>
                     <span className="block font-medium">{ch.title || "未命名章节"}</span>
-                    <span className="mt-0.5 block text-xs text-[#8a6040]">{ch.content.replace(/\s/g, "").length} 字</span>
+                    <span className="mt-0.5 block text-xs text-[#9a7a58]">{ch.content.replace(/\s/g, "").length} 字</span>
                   </button>
                 ))}
               </div>
               <button onClick={() => { handleAddChapter(); setMobileTab("write"); }}
-                className="mt-3 w-full rounded-xl border border-dashed border-[#6a4020] px-4 py-2.5 text-sm text-[#c8a878]">+ 新章节</button>
-              <Link href={`/book-soul?bookId=${activeBookId}`} className="mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#c8a878]">
+                className="mt-3 w-full rounded-xl border border-dashed border-[#c8a87a] px-4 py-2.5 text-sm text-[#7c5038]">+ 新章节</button>
+              <Link href={`/book-soul?bookId=${activeBookId}`} className="mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#7c5038]">
                 <span>🪬</span><span>书籍灵魂卡</span>
               </Link>
             </div>
           )}
           {mobileTab === "tools" && (
             <div className="h-full overflow-y-auto p-4 space-y-4">
-              <div className="rounded-2xl border border-[#5a4010] bg-[#1e1500] p-4">
-                <p className="mb-2 text-xs font-medium text-[#c8a878]">速记灵感</p>
+              <div className="rounded-2xl border border-[#e0d4c0] bg-[#f0ead8] p-4">
+                <p className="mb-2 text-xs font-medium text-[#7c5038]">速记灵感</p>
                 <textarea value={quickNote} onChange={(e) => setQuickNote(e.target.value)}
-                  className="min-h-20 w-full resize-none bg-transparent text-sm leading-6 text-[#e8d5b7] outline-none placeholder:text-[#5a3820]"
+                  className="min-h-20 w-full resize-none bg-transparent text-sm leading-6 text-[#3d2b1a] outline-none placeholder:text-[#c0a078]"
                   placeholder="突然想到的台词、伏笔……先丢这里。" />
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="text-xs text-[#8a6040]">{quickNote.trim().length} 字</span>
-                  <button onClick={saveQuickNote} className="rounded-full bg-[#6e4b2d] px-4 py-1.5 text-xs text-amber-50">贴到灵感墙</button>
+                  <span className="text-xs text-[#9a7a58]">{quickNote.trim().length} 字</span>
+                  <button onClick={saveQuickNote} className="rounded-full bg-[#7c4f2a] px-4 py-1.5 text-xs text-amber-50">贴到灵感墙</button>
                 </div>
-                {noteSavedMessage && <p className="mt-2 text-xs text-[#c8a878]">{noteSavedMessage}</p>}
+                {noteSavedMessage && <p className="mt-2 text-xs text-[#7c5038]">{noteSavedMessage}</p>}
               </div>
-              <div className="rounded-2xl border border-[#4c2c14] bg-[#311d0c] p-4">
-                <label className="mb-2 block text-xs font-medium text-[#c8a878]">本章大纲</label>
+              <div className="rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-4">
+                <label className="mb-2 block text-xs font-medium text-[#7c5038]">本章大纲</label>
                 <textarea rows={3} value={activeChapter?.outline ?? ""} onChange={(e) => updateActiveChapter({ outline: e.target.value })}
-                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]" placeholder="这一章要写什么？" />
+                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#3d2b1a] outline-none placeholder:text-[#c0a078]" placeholder="这一章要写什么？" />
               </div>
-              <div className="rounded-2xl border border-[#4c2c14] bg-[#311d0c] p-4">
-                <label className="mb-2 block text-xs font-medium text-[#c8a878]">本次指令</label>
+              <div className="rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-4">
+                <label className="mb-2 block text-xs font-medium text-[#7c5038]">本次指令</label>
                 <textarea rows={2} value={activeChapter?.aiInstruction ?? ""} onChange={(e) => updateActiveChapter({ aiInstruction: e.target.value })}
-                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]" placeholder="对 AI 的特别要求……" />
+                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#3d2b1a] outline-none placeholder:text-[#c0a078]" placeholder="对 AI 的特别要求……" />
               </div>
               {modelOptions.length > 0 && (
-                <div className="rounded-2xl border border-[#4c2c14] bg-[#311d0c] p-4">
-                  <label className="mb-2 block text-xs font-medium text-[#c8a878]">本次模型</label>
+                <div className="rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-4">
+                  <label className="mb-2 block text-xs font-medium text-[#7c5038]">本次模型</label>
                   <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}
-                    className="w-full rounded-xl border border-[#4c2c14] bg-[#261609] px-3 py-2 text-sm text-[#f0e6d3] outline-none">
+                    className="w-full rounded-xl border border-[#e0d4c0] bg-[#f0ead8] px-3 py-2 text-sm text-[#3d2b1a] outline-none">
                     {modelOptions.map((m) => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
               )}
               <button onClick={handleAIWrite}
-                className={`w-full rounded-xl px-4 py-3 text-sm text-amber-50 transition ${aiStreaming ? "bg-[#6a4020]" : "bg-[#6e4b2d]"}`}>
+                className={`w-full rounded-xl px-4 py-3 text-sm text-amber-50 transition ${aiStreaming ? "bg-[#9a7a58] hover:bg-[#7c5038]" : "bg-[#7c4f2a] hover:bg-[#643e1f]"}`}>
                 {aiStreaming ? "⏹ 停止生成" : "✍️ AI 扩写"}
               </button>
               {aiDraft && (
-                <div className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-4">
+                <div className="rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-4">
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-xs font-medium text-[#c8a878]">草稿 · {aiDraft.replace(/\s/g, "").length} 字</span>
-                    <button onClick={() => setAiDraft("")} className="text-xs text-[#8a6040]">清空</button>
+                    <span className="text-xs font-medium text-[#7c5038]">草稿 · {aiDraft.replace(/\s/g, "").length} 字</span>
+                    <button onClick={() => setAiDraft("")} className="text-xs text-[#9a7a58]">清空</button>
                   </div>
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-[#e8d5b7]">
-                    {aiDraft}{aiStreaming && <span className="animate-pulse text-[#c8a878]">▍</span>}
+                  <p className="whitespace-pre-wrap text-sm leading-7 text-[#3d2b1a]">
+                    {aiDraft}{aiStreaming && <span className="animate-pulse text-[#7c5038]">▍</span>}
                   </p>
-                  {!aiStreaming && <button onClick={handleAppendDraft} className="mt-3 w-full rounded-xl bg-[#6e4b2d] px-4 py-2 text-xs text-amber-50">追加到正文 →</button>}
+                  {!aiStreaming && <button onClick={handleAppendDraft} className="mt-3 w-full rounded-xl bg-[#7c4f2a] px-4 py-2 text-xs text-amber-50">追加到正文 →</button>}
                 </div>
               )}
               {/* Analysis */}
-              <div className="rounded-2xl border border-[#4c2c14] bg-[#261609] p-4">
-                <p className="mb-3 text-xs font-medium text-[#c8a878]">文本检测</p>
+              <div className="rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-4">
+                <p className="mb-3 text-xs font-medium text-[#7c5038]">文本检测</p>
                 <AnalysisPanel
                   analysisMode={analysisMode}
                   repeatWords={repeatWords}
@@ -430,13 +427,13 @@ export default function WritePage() {
             </div>
           )}
         </div>
-        <nav className="flex shrink-0 border-t border-[#4c2c14] bg-[#261609]/95">
+        <nav className="flex shrink-0 border-t border-[#e0d4c0] bg-[#fdf9f4]/95">
           {(["write", "chapters", "tools", "advisor"] as const).map((tab) => {
             const items = { write: ["✍️", "写作"], chapters: ["📑", "章节"], tools: ["🔧", "工具"], advisor: ["🎯", "军师"] };
             const [icon, label] = items[tab];
             return (
               <button key={tab} onClick={() => setMobileTab(tab)}
-                className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs transition ${mobileTab === tab ? "text-[#d4a05a]" : "text-[#5a3820]"}`}>
+                className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs transition ${mobileTab === tab ? "text-[#a07030]" : "text-[#b8956a]"}`}>
                 <span className="text-lg">{icon}</span>
                 <span>{label}</span>
               </button>
@@ -481,36 +478,36 @@ export default function WritePage() {
             />
           )}
           <div className="flex-1 overflow-auto px-12 py-10">
-            <div className="mx-auto max-w-3xl rounded-[1.5rem] border border-[#4c2c14] bg-[#261609] p-8 shadow-sm">
+            <div className="mx-auto max-w-3xl rounded-[1.5rem] border border-[#e0d4c0] bg-[#faf7f2] p-8 shadow-sm">
               <textarea
                 ref={editorRef}
                 value={content}
                 onChange={(e) => updateActiveChapter({ content: e.target.value })}
-                className="min-h-[60vh] w-full resize-none bg-transparent text-lg leading-9 text-[#e8d5b7] outline-none placeholder:text-[#5a3820]"
+                className="min-h-[60vh] w-full resize-none bg-transparent text-lg leading-9 text-[#3d2b1a] outline-none placeholder:text-[#c0a078]"
                 placeholder="从这里开始写吧。可以是一句话，一个场景，或者今天突然亮起来的那一幕……"
               />
             </div>
           </div>
-          <div className="flex items-center justify-between border-t border-[#4c2c14] bg-[#261609]/60 px-6 py-2">
+          <div className="flex items-center justify-between border-t border-[#e0d4c0] bg-[#fdf9f4]/60 px-6 py-2">
             <button
               onClick={() => { setShowFind((f) => !f); if (!showFind) setTimeout(() => findInputRef.current?.focus(), 50); }}
-              className="rounded-full border border-[#6a4020] bg-[#311d0c] px-4 py-1.5 text-sm text-[#c8a878] shadow-sm transition hover:bg-[#4c2c14]">
-              查找替换 <kbd className="ml-1 text-[10px] text-[#8a6040]">⌘F</kbd>
+              className="rounded-full border border-[#e0d4c0] bg-[#faf7f2] px-4 py-1.5 text-sm text-[#7c5038] shadow-sm transition hover:bg-[#f0ead8]">
+              查找替换 <kbd className="ml-1 text-[10px] text-[#9a7a58]">⌘F</kbd>
             </button>
             <button onClick={() => setAdvisorOpen((o) => !o)}
-              className="rounded-full border border-[#6a4020] bg-[#311d0c] px-6 py-1.5 text-sm text-[#d4a05a] shadow-sm transition hover:bg-[#4c2c14]">
+              className="rounded-full border border-[#e0d4c0] bg-[#faf7f2] px-6 py-1.5 text-sm text-[#a07030] shadow-sm transition hover:bg-[#f0ead8]">
               {advisorOpen ? "收起军师 ↓" : "写作军师 ↑"}
             </button>
           </div>
           {advisorOpen && (
-            <div className="h-96 shrink-0 border-t border-[#4c2c14]">
+            <div className="h-96 shrink-0 border-t border-[#e0d4c0]">
               <AdvisorPanel bookId={activeBookId} chapters={bookChapters} activeChapterId={activeChapterId} />
             </div>
           )}
         </section>
 
         {/* Right sidebar */}
-        <aside className="flex flex-col gap-5 overflow-y-auto border-l border-[#4c2c14] bg-[#261609] p-5">
+        <aside className="flex flex-col gap-5 overflow-y-auto border-l border-[#e0d4c0] bg-[#faf7f2] p-5">
           {/* Quick note */}
           <QuickNoteBox
             value={quickNote}
@@ -521,45 +518,45 @@ export default function WritePage() {
 
           {/* AI writing */}
           <section>
-            <p className="mb-4 text-sm font-medium text-[#c8a878]">AI 扩写准备</p>
+            <p className="mb-4 text-sm font-medium text-[#7c5038]">AI 扩写准备</p>
             <div className="space-y-3">
-              <div className="rounded-2xl border border-[#4c2c14] bg-[#311d0c] p-4">
-                <label className="mb-2 block text-xs font-medium text-[#c8a878]">本章大纲</label>
+              <div className="rounded-2xl border border-[#e0d4c0] bg-[#f0ead8] p-4">
+                <label className="mb-2 block text-xs font-medium text-[#7c5038]">本章大纲</label>
                 <textarea rows={4} value={activeChapter?.outline ?? ""} onChange={(e) => updateActiveChapter({ outline: e.target.value })}
-                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
+                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#3d2b1a] outline-none placeholder:text-[#c0a078]"
                   placeholder="这一章要写什么？几个关键节拍或场景……" />
               </div>
-              <div className="rounded-2xl border border-[#4c2c14] bg-[#311d0c] p-4">
-                <label className="mb-2 block text-xs font-medium text-[#c8a878]">本次指令</label>
+              <div className="rounded-2xl border border-[#e0d4c0] bg-[#f0ead8] p-4">
+                <label className="mb-2 block text-xs font-medium text-[#7c5038]">本次指令</label>
                 <textarea rows={3} value={activeChapter?.aiInstruction ?? ""} onChange={(e) => updateActiveChapter({ aiInstruction: e.target.value })}
-                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
+                  className="w-full resize-none bg-transparent text-sm leading-6 text-[#3d2b1a] outline-none placeholder:text-[#c0a078]"
                   placeholder="对 AI 的特别要求，比如：重点写眼神交流，不要推进剧情……" />
               </div>
             </div>
             {modelOptions.length > 0 && (
-              <div className="mt-3 rounded-2xl border border-[#4c2c14] bg-[#311d0c] p-4">
-                <label className="mb-2 block text-xs font-medium text-[#c8a878]">本次模型</label>
+              <div className="mt-3 rounded-2xl border border-[#e0d4c0] bg-[#f0ead8] p-4">
+                <label className="mb-2 block text-xs font-medium text-[#7c5038]">本次模型</label>
                 <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}
-                  className="w-full rounded-xl border border-[#4c2c14] bg-[#261609] px-3 py-2 text-sm text-[#f0e6d3] outline-none">
+                  className="w-full rounded-xl border border-[#e0d4c0] bg-[#faf7f2] px-3 py-2 text-sm text-[#3d2b1a] outline-none">
                   {modelOptions.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
             )}
             <button onClick={handleAIWrite}
-              className={`mt-4 w-full rounded-xl px-4 py-3 text-sm text-amber-50 transition ${aiStreaming ? "bg-[#6a4020] hover:bg-[#4c2c14]" : "bg-[#6e4b2d] hover:bg-[#58391f]"}`}>
+              className={`mt-4 w-full rounded-xl px-4 py-3 text-sm text-amber-50 transition ${aiStreaming ? "bg-[#9a7a58] hover:bg-[#7c5038]" : "bg-[#7c4f2a] hover:bg-[#643e1f]"}`}>
               {aiStreaming ? "⏹ 停止生成" : "✍️ AI 扩写"}
             </button>
             {aiDraft && (
-              <div className="mt-3 rounded-2xl border border-[#4c2c14] bg-[#261609] p-4">
+              <div className="mt-3 rounded-2xl border border-[#e0d4c0] bg-[#faf7f2] p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-[#c8a878]">草稿 · {aiDraft.replace(/\s/g, "").length} 字</span>
-                  <button onClick={() => setAiDraft("")} className="text-xs text-[#8a6040] hover:text-[#c8a878] transition">清空</button>
+                  <span className="text-xs font-medium text-[#7c5038]">草稿 · {aiDraft.replace(/\s/g, "").length} 字</span>
+                  <button onClick={() => setAiDraft("")} className="text-xs text-[#9a7a58] hover:text-[#7c5038] transition">清空</button>
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-7 text-[#e8d5b7]">
-                  {aiDraft}{aiStreaming && <span className="animate-pulse text-[#c8a878]">▍</span>}
+                <p className="whitespace-pre-wrap text-sm leading-7 text-[#3d2b1a]">
+                  {aiDraft}{aiStreaming && <span className="animate-pulse text-[#7c5038]">▍</span>}
                 </p>
                 {!aiStreaming && (
-                  <button onClick={handleAppendDraft} className="mt-3 w-full rounded-xl bg-[#6e4b2d] px-4 py-2 text-xs text-amber-50 transition hover:bg-[#58391f]">追加到正文 →</button>
+                  <button onClick={handleAppendDraft} className="mt-3 w-full rounded-xl bg-[#7c4f2a] px-4 py-2 text-xs text-amber-50 transition hover:bg-[#643e1f]">追加到正文 →</button>
                 )}
               </div>
             )}
@@ -567,7 +564,7 @@ export default function WritePage() {
 
           {/* Text analysis */}
           <section>
-            <p className="mb-3 text-sm font-medium text-[#c8a878]">文本检测</p>
+            <p className="mb-3 text-sm font-medium text-[#7c5038]">文本检测</p>
             <AnalysisPanel
               analysisMode={analysisMode}
               repeatWords={repeatWords}
@@ -582,11 +579,11 @@ export default function WritePage() {
       </div>
 
       {/* Footer */}
-      <footer className="hidden items-center gap-6 border-t border-[#4c2c14] bg-[#261609]/90 px-8 py-3 text-xs text-[#c8a878] md:flex">
+      <footer className="hidden items-center gap-6 border-t border-[#e0d4c0] bg-[#fdf9f4]/90 px-8 py-3 text-xs text-[#7c5038] md:flex">
         <span>{wordCount} 字</span>
         <span>{characterCount} 字符</span>
         <span>{paragraphCount} 段</span>
-        <span className="ml-auto text-[#8a6040]">共 {bookChapters.length} 章</span>
+        <span className="ml-auto text-[#9a7a58]">共 {bookChapters.length} 章</span>
       </footer>
     </main>
   );

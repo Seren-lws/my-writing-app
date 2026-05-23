@@ -34,18 +34,18 @@ export default function ChapterSidebar({
 }: Props) {
   return (
     <aside
-      className={`flex flex-col border-r border-[#4c2c14] bg-[#261609] overflow-hidden ${
+      className={`flex flex-col border-r border-[#e0d4c0] bg-[#faf7f2] overflow-hidden ${
         leftOpen ? "p-5" : "items-center pt-4"
       }`}
     >
       {leftOpen ? (
         <>
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm font-medium text-[#c8a878]">章节</p>
+            <p className="text-sm font-medium text-[#7c5038]">章节</p>
             <button
               onClick={() => onToggle(false)}
               title="收起"
-              className="rounded-lg px-2 py-1 text-xs text-[#8a6040] transition hover:bg-[#311d0c] hover:text-[#c8a878]"
+              className="rounded-lg px-2 py-1 text-xs text-[#9a7a58] transition hover:bg-[#f0ead8] hover:text-[#7c5038]"
             >
               ‹
             </button>
@@ -57,12 +57,12 @@ export default function ChapterSidebar({
                 onClick={() => onSwitchChapter(ch.id)}
                 className={`w-full rounded-xl px-4 py-3 text-left text-sm transition ${
                   ch.id === activeChapterId
-                    ? "bg-[#4c2c14] text-[#f0e6d3] shadow-sm"
-                    : "text-[#c8a878] hover:bg-[#311d0c]"
+                    ? "bg-[#f0ead8] text-[#3d2b1a] shadow-sm"
+                    : "text-[#7c5038] hover:bg-[#f0ead8]"
                 }`}
               >
-                <span className="block truncate">{ch.title || "未命名章节"}</span>
-                <span className="mt-0.5 block text-xs text-[#8a6040]">
+                <span className="block truncate font-medium">{ch.title || "未命名章节"}</span>
+                <span className="mt-0.5 block text-xs text-[#9a7a58]">
                   {ch.content.replace(/\s/g, "").length} 字
                 </span>
               </button>
@@ -70,13 +70,13 @@ export default function ChapterSidebar({
           </div>
           <button
             onClick={onAddChapter}
-            className="mt-4 w-full rounded-xl border border-dashed border-[#6a4020] px-4 py-2.5 text-sm text-[#c8a878] transition hover:bg-[#311d0c]"
+            className="mt-4 w-full rounded-xl border border-dashed border-[#c8a87a] px-4 py-2.5 text-sm text-[#7c5038] transition hover:bg-[#f0ead8]"
           >
             + 新章节
           </button>
           <Link
             href={`/book-soul?bookId=${activeBookId}`}
-            className="mt-2 flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#c8a878] transition hover:bg-[#311d0c]"
+            className="mt-2 flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#7c5038] transition hover:bg-[#f0ead8]"
           >
             <span>🪬</span>
             <span>书籍灵魂卡</span>
@@ -86,7 +86,7 @@ export default function ChapterSidebar({
         <button
           onClick={() => onToggle(true)}
           title="展开章节列表"
-          className="flex flex-col items-center gap-2 text-[#8a6040] transition hover:text-[#c8a878]"
+          className="flex flex-col items-center gap-2 text-[#9a7a58] transition hover:text-[#7c5038]"
         >
           <span className="text-base leading-none">›</span>
           <span className="text-[10px] [writing-mode:vertical-rl]">章节</span>

@@ -29,8 +29,8 @@ export default function AnalysisPanel({
           onClick={onRepeatAnalysis}
           className={`flex-1 rounded-xl border py-2 text-xs transition ${
             analysisMode === "repeat"
-              ? "border-[#6e4b2d] bg-[#6e4b2d] text-amber-50"
-              : "border-[#6a4020] text-[#c8a878] hover:bg-[#311d0c]"
+              ? "border-[#7c4f2a] bg-[#7c4f2a] text-amber-50"
+              : "border-[#e0d4c0] text-[#7c5038] hover:bg-[#f0ead8]"
           }`}
         >
           重复词
@@ -39,8 +39,8 @@ export default function AnalysisPanel({
           onClick={onAIAnalysis}
           className={`flex-1 rounded-xl border py-2 text-xs transition ${
             analysisMode === "ai"
-              ? "border-[#6e4b2d] bg-[#6e4b2d] text-amber-50"
-              : "border-[#6a4020] text-[#c8a878] hover:bg-[#311d0c]"
+              ? "border-[#7c4f2a] bg-[#7c4f2a] text-amber-50"
+              : "border-[#e0d4c0] text-[#7c5038] hover:bg-[#f0ead8]"
           }`}
         >
           {aiAnalyzing ? "检测中…" : "AI 检测"}
@@ -52,21 +52,21 @@ export default function AnalysisPanel({
         <div className="mt-3">
           {repeatWords.length > 0 ? (
             <>
-              <p className="mb-2 text-xs text-[#8a6040]">点击词语可在编辑器中定位</p>
+              <p className="mb-2 text-xs text-[#9a7a58]">点击词语可在编辑器中定位</p>
               <div className="flex flex-wrap gap-1.5">
                 {repeatWords.map(({ word, count }) => (
                   <button
                     key={word}
                     onClick={() => onLocate(word)}
-                    className="rounded-full border border-[#6a4020] bg-[#311d0c] px-2.5 py-1 text-xs text-[#d4a05a] transition hover:bg-[#4c2c14]"
+                    className="rounded-full border border-[#e0d4c0] bg-[#f0ead8] px-2.5 py-1 text-xs text-[#a07030] transition hover:bg-[#e8d8c0]"
                   >
-                    {word} <span className="text-[#8a6040]">×{count}</span>
+                    {word} <span className="text-[#9a7a58]">×{count}</span>
                   </button>
                 ))}
               </div>
             </>
           ) : (
-            <p className="text-xs text-[#8a6040]">未发现明显重复词（≥3次）</p>
+            <p className="text-xs text-[#9a7a58]">未发现明显重复词（≥3次）</p>
           )}
         </div>
       )}
@@ -75,34 +75,34 @@ export default function AnalysisPanel({
       {analysisMode === "ai" && (
         <div className="mt-3">
           {aiAnalyzing && (
-            <p className="text-xs text-[#8a6040] animate-pulse">AI 正在分析…</p>
+            <p className="text-xs text-[#9a7a58] animate-pulse">AI 正在分析…</p>
           )}
           {!aiAnalyzing && aiIssues.length === 0 && (
-            <p className="text-xs text-[#8a6040]">未发现明显问题</p>
+            <p className="text-xs text-[#9a7a58]">未发现明显问题</p>
           )}
           {aiIssues.length > 0 && (
             <div className="space-y-2">
               {aiIssues.map((issue, i) => (
-                <div key={i} className="rounded-xl border border-[#4c2c14] bg-[#311d0c] p-3">
+                <div key={i} className="rounded-xl border border-[#e0d4c0] bg-[#f0ead8] p-3">
                   <div className="mb-1.5 flex items-center gap-2">
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
                         issue.type === "typo"
-                          ? "bg-red-950/50 text-red-400"
-                          : "bg-[#1e1500] text-[#c8a060]"
+                          ? "bg-red-50 text-red-600"
+                          : "bg-amber-50 text-amber-700"
                       }`}
                     >
                       {issue.type === "typo" ? "错别字" : "AI味"}
                     </span>
                     <button
                       onClick={() => onLocate(issue.text.slice(0, 12))}
-                      className="text-[10px] text-[#8a6040] underline underline-offset-2 hover:text-[#c8a878]"
+                      className="text-[10px] text-[#9a7a58] underline underline-offset-2 hover:text-[#7c5038]"
                     >
                       定位
                     </button>
                   </div>
-                  <p className="text-xs text-[#f0e6d3] leading-5">「{issue.text}」</p>
-                  <p className="mt-1 text-xs text-[#8a6040] leading-5">{issue.suggestion}</p>
+                  <p className="text-xs text-[#3d2b1a] leading-5">「{issue.text}」</p>
+                  <p className="mt-1 text-xs text-[#9a7a58] leading-5">{issue.suggestion}</p>
                 </div>
               ))}
             </div>

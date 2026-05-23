@@ -62,14 +62,14 @@ const SETTINGS_LINKS = [
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#1a0f08] text-[#f0e6d3]">
+    <main className="min-h-screen bg-[#f5f0e8] text-[#3d2b1a]">
       <div className="mx-auto flex max-w-2xl flex-col items-center px-4 py-8">
 
         <header className="mb-6 text-center">
-          <p className="text-xs tracking-[0.25em] text-[#9b744d]">
+          <p className="text-xs tracking-[0.25em] text-[#a07840]">
             SHENGSHENG WRITING ROOM
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[#f0e6d3]">
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[#3d2b1a]">
             声声的写作小屋
           </h1>
         </header>
@@ -107,14 +107,14 @@ export default function Home() {
             <Link
               key={label}
               href={href}
-              className="rounded-full border border-[#6e4b2d]/60 bg-[#2d1a0a] px-5 py-2 text-sm text-[#c7a984] transition hover:border-[#9b744d] hover:text-[#f0e6d3]"
+              className="rounded-full border border-[#e0d4c0] bg-[#faf7f2] px-5 py-2 text-sm text-[#7c5038] transition hover:border-[#c8a87a] hover:text-[#3d2b1a]"
             >
               {label}
             </Link>
           ))}
         </div>
 
-        <p className="mt-6 text-center text-xs text-[#6e4b2d]">
+        <p className="mt-6 text-center text-xs text-[#9a7a58]">
           更好陪伴，更多趣味，更强动力。
         </p>
       </div>

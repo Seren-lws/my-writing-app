@@ -42,10 +42,10 @@ export default function FindReplaceBar({
   onClose,
 }: Props) {
   return (
-    <div className="shrink-0 border-b border-[#4c2c14] bg-[#261609] px-4 py-2 space-y-1.5">
+    <div className="shrink-0 border-b border-[#e0d4c0] bg-[#faf7f2] px-4 py-2 space-y-1.5">
       {/* Find row */}
       <div className="flex items-center gap-2">
-        <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-[#6a4020] bg-[#311d0c] px-3 py-1.5">
+        <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-[#c8a87a] bg-[#f0ead8] px-3 py-1.5">
           <input
             ref={findInputRef}
             type="text"
@@ -56,13 +56,13 @@ export default function FindReplaceBar({
               if (e.key === "Escape") onClose();
             }}
             placeholder="查找…"
-            className="flex-1 bg-transparent text-sm text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
+            className="flex-1 bg-transparent text-sm text-[#3d2b1a] outline-none placeholder:text-[#c0a078]"
           />
           <button
             title="区分大小写"
             onClick={() => onToggleCaseSensitive(!findCaseSensitive)}
             className={`rounded px-1.5 py-0.5 text-xs font-mono transition ${
-              findCaseSensitive ? "bg-[#6e4b2d] text-amber-50" : "text-[#8a6040] hover:text-[#c8a878]"
+              findCaseSensitive ? "bg-[#7c4f2a] text-amber-50" : "text-[#9a7a58] hover:text-[#3d2b1a]"
             }`}
           >
             Aa
@@ -71,13 +71,13 @@ export default function FindReplaceBar({
             title="正则表达式"
             onClick={() => onToggleRegex(!findUseRegex)}
             className={`rounded px-1.5 py-0.5 text-xs font-mono transition ${
-              findUseRegex ? "bg-[#6e4b2d] text-amber-50" : "text-[#8a6040] hover:text-[#c8a878]"
+              findUseRegex ? "bg-[#7c4f2a] text-amber-50" : "text-[#9a7a58] hover:text-[#3d2b1a]"
             }`}
           >
             .*
           </button>
         </div>
-        <span className="shrink-0 min-w-[40px] text-center text-xs text-[#8a6040]">
+        <span className="shrink-0 min-w-[40px] text-center text-xs text-[#9a7a58]">
           {findMatches.length > 0
             ? `${findMatchIdx + 1}/${findMatches.length}`
             : findQuery ? "0 个" : ""}
@@ -85,20 +85,20 @@ export default function FindReplaceBar({
         <button
           onClick={onFindPrev}
           disabled={!findMatches.length}
-          className="rounded px-2 py-1 text-[#c8a878] hover:bg-[#4c2c14] disabled:opacity-30 text-sm"
+          className="rounded px-2 py-1 text-[#7c5038] hover:bg-[#f0ead8] disabled:opacity-30 text-sm"
         >
           ↑
         </button>
         <button
           onClick={onFindNext}
           disabled={!findMatches.length}
-          className="rounded px-2 py-1 text-[#c8a878] hover:bg-[#4c2c14] disabled:opacity-30 text-sm"
+          className="rounded px-2 py-1 text-[#7c5038] hover:bg-[#f0ead8] disabled:opacity-30 text-sm"
         >
           ↓
         </button>
         <button
           onClick={onClose}
-          className="rounded px-2 py-1 text-[#8a6040] hover:text-[#c8a878] text-sm"
+          className="rounded px-2 py-1 text-[#9a7a58] hover:text-[#7c5038] text-sm"
         >
           ✕
         </button>
@@ -106,27 +106,27 @@ export default function FindReplaceBar({
 
       {/* Replace row */}
       <div className="flex items-center gap-2">
-        <div className="flex flex-1 items-center rounded-xl border border-[#4c2c14] bg-[#311d0c] px-3 py-1.5">
+        <div className="flex flex-1 items-center rounded-xl border border-[#e0d4c0] bg-[#f0ead8] px-3 py-1.5">
           <input
             type="text"
             value={replaceQuery}
             onChange={(e) => onReplaceChange(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") onReplace(); }}
             placeholder="替换为…"
-            className="flex-1 bg-transparent text-sm text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
+            className="flex-1 bg-transparent text-sm text-[#3d2b1a] outline-none placeholder:text-[#c0a078]"
           />
         </div>
         <button
           onClick={onReplace}
           disabled={!findMatches.length}
-          className="rounded-lg border border-[#6a4020] px-3 py-1.5 text-xs text-[#c8a878] transition hover:bg-[#311d0c] disabled:opacity-30"
+          className="rounded-lg border border-[#e0d4c0] px-3 py-1.5 text-xs text-[#7c5038] transition hover:bg-[#f0ead8] disabled:opacity-30"
         >
           替换
         </button>
         <button
           onClick={onReplaceAll}
           disabled={!findMatches.length}
-          className="rounded-lg border border-[#6a4020] px-3 py-1.5 text-xs text-[#c8a878] transition hover:bg-[#311d0c] disabled:opacity-30"
+          className="rounded-lg border border-[#e0d4c0] px-3 py-1.5 text-xs text-[#7c5038] transition hover:bg-[#f0ead8] disabled:opacity-30"
         >
           全替换
         </button>
