@@ -78,7 +78,24 @@ const btnCls = (wide?: boolean) =>
 export default function Home() {
   return (
     // Mobile: dark wood bg; Desktop: rainy-night atmospheric dark
-    <main className="min-h-screen bg-[#2a1608] text-[#f0e6d3] md:bg-[#141e2c]">
+    <main className="min-h-screen bg-[#2a1608] text-[#f0e6d3]">
+
+      {/* ── Desktop background: gothic rainy window ────────────────────── */}
+      <div className="fixed inset-0 z-0 hidden md:block">
+        <Image
+          src="/window-rain.png"
+          alt=""
+          fill
+          className="object-cover"
+          style={{ filter: "brightness(0.62) saturate(0.85)" }}
+          priority
+        />
+        {/* Frosted blur overlay */}
+        <div
+          className="absolute inset-0"
+          style={{ backdropFilter: "blur(3px)", background: "rgba(10,16,28,0.35)" }}
+        />
+      </div>
 
       {/* Rain drops — desktop only, fixed full-screen */}
       <RainWindow />
