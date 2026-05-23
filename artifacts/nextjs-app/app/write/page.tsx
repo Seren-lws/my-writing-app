@@ -8,56 +8,19 @@ import ChapterSidebar from "./components/ChapterSidebar";
 import FindReplaceBar from "./components/FindReplaceBar";
 import QuickNoteBox from "./components/QuickNoteBox";
 import AnalysisPanel from "./components/AnalysisPanel";
-import { useFindReplace } from "./hooks/useFindReplace";
+import { useBooksAndChapters } from "./hooks/useBooksAndChapters";
 import { useAutoSave } from "./hooks/useAutoSave";
+import { useFindReplace } from "./hooks/useFindReplace";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-type Book = { id: string; title: string; createdAt: string; updatedAt: string };
-type Chapter = { id: string; bookId: string; title: string; content: string; outline: string; aiInstruction: string; createdAt: string; updatedAt: string };
 type Inspiration = { id: string; content: string; createdAt: string };
 type AIIssue = { type: "typo" | "ai"; text: string; suggestion: string };
+type Chapter = { id: string; bookId: string; title: string; content: string; outline: string; aiInstruction: string; createdAt: string; updatedAt: string };
 
-// ── Storage helpers ────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 function ts() { return new Date().toISOString(); }
-function loadBooks(): Book[] { try { const r = localStorage.getItem("books"); return r ? JSON.parse(r) : []; } catch { return []; } }
-function loadChapters(): Chapter[] { try { const r = localStorage.getItem("chapters"); return r ? JSON.parse(r) : []; } catch { return []; } }
-function persistBooks(b: Book[]) { localStorage.setItem("books", JSON.stringify(b)); }
-function persistChapters(c: Chapter[]) { localStorage.setItem("chapters", JSON.stringify(c)); }
-
-// ── Bootstrap ──────────────────────────────────────────────────────────────
-
-function bootstrap(urlBookId: string): { books: Book[]; chapters: Chapter[]; activeBookId: string } {
-  let books = loadBooks();
-  let chapters = loadChapters();
-  if (books.length === 0) {
-    const defaultBook: Book = { id: crypto.randomUUID(), title: "靡音", createdAt: ts(), updatedAt: ts() };
-    books = [defaultBook];
-    persistBooks(books);
-  }
-  const defaultBookId = books[0].id;
-  let migrated = false;
-  chapters = chapters.map((c) => {
-    const needsBookId = !c.bookId;
-    const needsOutline = c.outline === undefined;
-    const needsAiInstruction = c.aiInstruction === undefined;
-    if (needsBookId || needsOutline || needsAiInstruction) {
-      migrated = true;
-      return { ...c, bookId: c.bookId || defaultBookId, outline: c.outline ?? "", aiInstruction: c.aiInstruction ?? "" };
-    }
-    return c;
-  });
-  if (migrated) persistChapters(chapters);
-  const targetBookId = urlBookId && books.find((b) => b.id === urlBookId) ? urlBookId : defaultBookId;
-  const bookChapters = chapters.filter((c) => c.bookId === targetBookId);
-  if (bookChapters.length === 0) {
-    const first: Chapter = { id: crypto.randomUUID(), bookId: targetBookId, title: "第一章", content: "", outline: "", aiInstruction: "", createdAt: ts(), updatedAt: ts() };
-    chapters = [...chapters, first];
-    persistChapters(chapters);
-  }
-  return { books, chapters, activeBookId: targetBookId };
-}
 
 // ── Repeat word analysis ───────────────────────────────────────────────────
 
@@ -88,13 +51,8 @@ function analyzeRepeatWords(text: string): { word: string; count: number }[] {
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function WritePage() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [activeBookId, setActiveBookId] = useState<string>("");
-  const [activeChapterId, setActiveChapterId] = useState<string>("");
   const [quickNote, setQuickNote] = useState("");
   const [noteSavedMessage, setNoteSavedMessage] = useState("");
-  const [ready, setReady] = useState(false);
   const [modelOptions, setModelOptions] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
   const [advisorOpen, setAdvisorOpen] = useState(false);
@@ -112,7 +70,31 @@ export default function WritePage() {
   const aiAbortRef = useRef<AbortController | null>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
 
-  // ── Auto-save hook ────────────────────────────────────────────────────────
+  // Stable ref that bridges useBooksAndChapters ↔ useAutoSave.
+  // useBooksAndChapters is called first (to get `chapters`), useAutoSave second.
+  // The ref is updated every render after both hooks run, so by the time
+  // the user actually clicks a chapter the ref holds the correct callbacks.
+  const afterSwitchRef = useRef<() => void>(() => {});
+
+  // ── Books & Chapters hook ─────────────────────────────────────────────────
+
+  const {
+    books,
+    chapters,
+    setChapters,
+    activeBookId,
+    activeChapterId,
+    ready,
+    activeBook,
+    bookChapters,
+    activeChapter,
+    handleSwitchChapter,
+    handleAddChapter,
+  } = useBooksAndChapters({
+    onAfterSwitchChapter: () => afterSwitchRef.current(),
+  });
+
+  // ── Auto-save hook (needs chapters from above) ────────────────────────────
 
   const {
     saveStatus,
@@ -123,27 +105,36 @@ export default function WritePage() {
     statusLabel,
   } = useAutoSave(chapters);
 
+  // Update the bridge ref every render so handleSwitchChapter always gets
+  // fresh cancelPendingSave / setSaveStatus references.
+  afterSwitchRef.current = () => {
+    cancelPendingSave();
+    setSaveStatus("idle");
+    setAnalysisMode("none");
+    setRepeatWords([]);
+    setAiIssues([]);
+  };
+
   // ── Derived values ────────────────────────────────────────────────────────
 
-  const activeBook = books.find((b) => b.id === activeBookId) ?? null;
-  const bookChapters = chapters.filter((c) => c.bookId === activeBookId);
-  const activeChapter = chapters.find((c) => c.id === activeChapterId) ?? null;
   const content = activeChapter?.content ?? "";
   const wordCount = content.replace(/\s/g, "").length;
   const characterCount = content.length;
   const paragraphCount = content.split("\n").filter(Boolean).length;
 
-  // ── updateActiveChapter (memoized so useFindReplace always gets latest) ───
+  // ── updateActiveChapter (memoized; passed to useFindReplace) ──────────────
 
   const updateActiveChapter = useCallback(
     (patch: Partial<Pick<Chapter, "title" | "content" | "outline" | "aiInstruction">>) => {
-      const updated = chapters.map((c) => c.id === activeChapterId ? { ...c, ...patch, updatedAt: ts() } : c);
+      const updated = chapters.map((c) =>
+        c.id === activeChapterId ? { ...c, ...patch, updatedAt: ts() } : c
+      );
       setChapters(updated);
       setSaveStatus("writing");
       scheduleAutoSave(updated);
       return updated;
     },
-    [chapters, activeChapterId, setSaveStatus, scheduleAutoSave]
+    [chapters, activeChapterId, setSaveStatus, scheduleAutoSave, setChapters]
   );
 
   // ── Find & Replace hook ───────────────────────────────────────────────────
@@ -169,17 +160,9 @@ export default function WritePage() {
     handleToggleRegex,
   } = useFindReplace({ content, editorRef, updateActiveChapter });
 
-  // ── Init ──────────────────────────────────────────────────────────────────
+  // ── Init: load model settings ─────────────────────────────────────────────
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlBookId = params.get("bookId") ?? "";
-    const { books: b, chapters: c, activeBookId: bid } = bootstrap(urlBookId);
-    setBooks(b);
-    setChapters(c);
-    setActiveBookId(bid);
-    const bookChapters = c.filter((ch) => ch.bookId === bid);
-    setActiveChapterId(bookChapters[0]?.id ?? "");
     try {
       const raw = localStorage.getItem("ai-model-settings");
       if (raw) {
@@ -191,7 +174,6 @@ export default function WritePage() {
         setSelectedModel(opts[0] ?? "");
       }
     } catch {}
-    setReady(true);
   }, []);
 
   // ── Keyboard shortcuts (no deps — intentional, avoids stale closures) ─────
@@ -210,34 +192,17 @@ export default function WritePage() {
     return () => window.removeEventListener("keydown", onKeyDown);
   });
 
-  // ── Chapter actions ───────────────────────────────────────────────────────
-
-  function handleSwitchChapter(id: string) {
-    if (id === activeChapterId) return;
-    cancelPendingSave();
-    persistChapters(chapters);
-    setActiveChapterId(id);
-    setSaveStatus("idle");
-    setAnalysisMode("none");
-    setRepeatWords([]);
-    setAiIssues([]);
-  }
-
-  function handleAddChapter() {
-    const newChapter: Chapter = { id: crypto.randomUUID(), bookId: activeBookId, title: "新章节", content: "", outline: "", aiInstruction: "", createdAt: ts(), updatedAt: ts() };
-    const updated = [...chapters, newChapter];
-    setChapters(updated);
-    setActiveChapterId(newChapter.id);
-    persistChapters(updated);
-  }
-
   // ── Quick note ────────────────────────────────────────────────────────────
 
   function saveQuickNote() {
     if (!quickNote.trim()) return;
     const saved = localStorage.getItem("inspirations");
     const old: Inspiration[] = saved ? JSON.parse(saved) : [];
-    const entry: Inspiration = { id: crypto.randomUUID(), content: quickNote.trim(), createdAt: new Date().toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) };
+    const entry: Inspiration = {
+      id: crypto.randomUUID(),
+      content: quickNote.trim(),
+      createdAt: new Date().toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }),
+    };
     localStorage.setItem("inspirations", JSON.stringify([entry, ...old]));
     setQuickNote("");
     setNoteSavedMessage("已贴到灵感墙");
