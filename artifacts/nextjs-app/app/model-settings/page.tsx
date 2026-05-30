@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
+import DataBackup from "../components/DataBackup";
 
 type ModelSettings = { baseUrl: string; apiKey: string; defaultModel: string; modelsText: string };
 const DEFAULTS: ModelSettings = { baseUrl: "", apiKey: "", defaultModel: "", modelsText: "" };
@@ -75,6 +76,10 @@ export default function ModelSettingsPage() {
           <button onClick={handleSave} className="rounded-full bg-[#7c4f2a] px-8 py-2.5 text-sm text-amber-50 transition hover:bg-[#643e1f]">
             保存设置
           </button>
+        </div>
+
+        <div className="mt-8">
+          <DataBackup />
         </div>
       </div>
     </main>
