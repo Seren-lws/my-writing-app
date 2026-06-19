@@ -45,20 +45,21 @@ type AdultSettings = {
 
 type WritingDNA = {
   languageStyle?: string;
-  preferences?: string;
+  writingPrefs?: string;
   taboos?: string;
   references?: string;
-  relationshipTension?: string;
+  dynamics?: string;
 };
 
 type BookSoul = {
   bookId: string;
-  tone?: string;
-  relationship?: string;
-  worldRules?: string;
-  mustNotBreak?: string;
-  keywords?: string;
-  aiReminder?: string;
+  worldview?: string;
+  styleGuide?: string;
+  materials?: string;
+  highlights?: string;
+  forbidden?: string;
+  notes?: string;
+  relationsOverview?: string;
 };
 
 function safeParse<T>(key: string, fallback: T): T {
@@ -154,7 +155,7 @@ API URL：${modelSettings?.baseUrl || "未配置"}
 ${writingDNA.languageStyle || "暂无"}
 
 写作偏好：
-${writingDNA.preferences || "暂无"}
+${writingDNA.writingPrefs || "暂无"}
 
 禁忌清单：
 ${writingDNA.taboos || "暂无"}
@@ -163,7 +164,7 @@ ${writingDNA.taboos || "暂无"}
 ${writingDNA.references || "暂无"}
 
 常用人物关系与张力：
-${writingDNA.relationshipTension || "暂无"}
+${writingDNA.dynamics || "暂无"}
 
 
 【第二层：这本书的灵魂】
@@ -171,23 +172,26 @@ ${writingDNA.relationshipTension || "暂无"}
 书名：
 ${book?.title || "未知作品"}
 
-核心基调：
-${soul?.tone || "暂无"}
+世界观：
+${soul?.worldview || "暂无"}
 
-主角关系与张力：
-${soul?.relationship || "暂无"}
+文风参考与指导：
+${soul?.styleGuide || "暂无"}
 
-世界观 / 背景规则：
-${soul?.worldRules || "暂无"}
+写作素材参考：
+${soul?.materials || "暂无"}
 
-绝对不能写崩的地方：
-${soul?.mustNotBreak || "暂无"}
+主要梗点和看点：
+${soul?.highlights || "暂无"}
 
-本书关键词：
-${soul?.keywords || "暂无"}
+禁区：
+${soul?.forbidden || "暂无"}
 
-AI 写作时要记住的提醒：
-${soul?.aiReminder || "暂无"}
+其他补充：
+${soul?.notes || "暂无"}
+
+角色关系概况：
+${soul?.relationsOverview || "暂无"}
 
 
 【第三层：当前章节】
@@ -292,23 +296,24 @@ ${
 
             <SectionCard title="第一层：我的写作 DNA">
               <p>语言风格：{writingDNA.languageStyle || "暂无"}</p>
-              <p>写作偏好：{writingDNA.preferences || "暂无"}</p>
+              <p>写作偏好：{writingDNA.writingPrefs || "暂无"}</p>
               <p>禁忌清单：{writingDNA.taboos || "暂无"}</p>
               <p>参考作品 / 参考作者：{writingDNA.references || "暂无"}</p>
               <p>
                 常用人物关系与张力：
-                {writingDNA.relationshipTension || "暂无"}
+                {writingDNA.dynamics || "暂无"}
               </p>
             </SectionCard>
 
             <SectionCard title="第二层：这本书的灵魂">
               <p>书名：{book?.title || "未知作品"}</p>
-              <p>核心基调：{soul?.tone || "暂无"}</p>
-              <p>主角关系与张力：{soul?.relationship || "暂无"}</p>
-              <p>世界观 / 背景规则：{soul?.worldRules || "暂无"}</p>
-              <p>绝对不能写崩的地方：{soul?.mustNotBreak || "暂无"}</p>
-              <p>本书关键词：{soul?.keywords || "暂无"}</p>
-              <p>AI 写作时要记住的提醒：{soul?.aiReminder || "暂无"}</p>
+              <p>世界观：{soul?.worldview || "暂无"}</p>
+              <p>文风参考与指导：{soul?.styleGuide || "暂无"}</p>
+              <p>写作素材参考：{soul?.materials || "暂无"}</p>
+              <p>主要梗点和看点：{soul?.highlights || "暂无"}</p>
+              <p>禁区：{soul?.forbidden || "暂无"}</p>
+              <p>其他补充：{soul?.notes || "暂无"}</p>
+              <p>角色关系概况：{soul?.relationsOverview || "暂无"}</p>
             </SectionCard>
 
             <SectionCard title="第四层：当次任务层">

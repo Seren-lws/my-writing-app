@@ -7,12 +7,13 @@ import Link from "next/link";
 
 type SoulCard = {
   bookId: string;
-  tone: string;
-  dynamics: string;
-  worldbuilding: string;
-  redlines: string;
-  keywords: string;
-  aiReminders: string;
+  worldview: string;
+  styleGuide: string;
+  materials: string;
+  highlights: string;
+  forbidden: string;
+  notes: string;
+  relationsOverview: string;
 };
 
 type Character = {
@@ -36,16 +37,16 @@ type Character = {
 // ── Constants ──────────────────────────────────────────────────────────────
 
 const EMPTY_CARD = {
-  tone: "", dynamics: "", worldbuilding: "", redlines: "", keywords: "", aiReminders: "",
+  worldview: "", styleGuide: "", materials: "", highlights: "", forbidden: "", notes: "", relationsOverview: "",
 };
 
 const SOUL_FIELDS: { key: keyof typeof EMPTY_CARD; label: string; placeholder: string }[] = [
-  { key: "tone", label: "这本书的核心基调", placeholder: "比如：暧昧、潮湿、克制、危险、沉溺……" },
-  { key: "dynamics", label: "主角关系与张力", placeholder: "比如：互相试探、权力差、欲望压抑、假装不在意……" },
-  { key: "worldbuilding", label: "世界观 / 背景规则", placeholder: "比如：故事发生地点、时代、职业背景、组织规则……" },
-  { key: "redlines", label: "绝对不能写崩的地方", placeholder: "比如：不要让角色突然变幼稚、不要把暧昧写得太直白……" },
-  { key: "keywords", label: "本书关键词", placeholder: "比如：雨夜、钢琴、香水、失控、沉默、吻……" },
-  { key: "aiReminders", label: "AI 写作时要记住的提醒", placeholder: "比如：多写身体语言，少解释心理；保持暧昧张力，不要急着戳破。" },
+  { key: "worldview", label: "世界观", placeholder: "故事发生在什么时代、什么地方、什么圈子或职业背景？有没有特殊的规则或设定？" },
+  { key: "styleGuide", label: "文风参考与指导", placeholder: "希望 AI 用什么语气、什么节奏写？参考哪部作品 / 哪个作者的文风？特别想要、或特别要避免的写法？" },
+  { key: "materials", label: "写作素材参考", placeholder: "可参考的真实素材、专业知识、场景细节，想用上的梗或灵感来源……" },
+  { key: "highlights", label: "主要梗点和看点", placeholder: "这本书最大的爽点 / 虐点 / 钩子是什么？读者会为了什么一直追下去？" },
+  { key: "forbidden", label: "禁区", placeholder: "禁止出现的词、绝对不能写崩的地方、雷区……（比如：不要网感词、不要 OOC、别把暧昧写太直白）" },
+  { key: "notes", label: "其他补充", placeholder: "上面没归到的、但还想叮嘱 AI 的任何东西。" },
 ];
 
 const CHAR_TEXT_FIELDS: { key: keyof Character; label: string; placeholder: string; rows: number }[] = [
@@ -142,6 +143,16 @@ export default function BookSoulPage() {
     setSavedAt(new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }));
   }
 
+  function handleRelationsChange(value: string) {
+    const next = { ...card, relationsOverview: value };
+    setCard(next);
+    const souls = safeParse<SoulCard[]>("book-souls", []);
+    const idx = souls.findIndex((s) => s.bookId === bookId);
+    const updated: SoulCard = { bookId, ...next };
+    if (idx >= 0) souls[idx] = updated; else souls.push(updated);
+    localStorage.setItem("book-souls", JSON.stringify(souls));
+  }
+
   // ── Characters ─────────────────────────────────────────────────────────
 
   function saveCharacters(updated: Character[]) {
@@ -229,6 +240,16 @@ export default function BookSoulPage() {
               className="rounded-full bg-[#6e4b2d] px-5 py-2 text-sm text-amber-50 transition hover:bg-[#58391f]">
               + 添加角色
             </button>
+          </div>
+
+          {/* 角色关系概况 */}
+          <div className="mb-6 rounded-2xl border border-[#e0c9a5] bg-[#fff8eb] p-6 shadow-sm">
+            <label className="mb-3 block text-sm font-medium text-[#6e4b2d]">角色关系概况</label>
+            <textarea rows={3} value={card.relationsOverview}
+              onChange={(e) => handleRelationsChange(e.target.value)}
+              placeholder="多个角色之间的关系网、阵营、立场……（比如：A 和 B 是兄弟但暗中较劲，C 夹在中间）"
+              className="w-full resize-none bg-transparent text-sm leading-7 text-[#4f3524] outline-none placeholder:text-[#c7a984]" />
+            <p className="mt-2 text-xs text-[#c7a984]">写多角色时用，会自动保存。</p>
           </div>
 
           {characters.length === 0 && (

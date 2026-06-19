@@ -257,15 +257,16 @@ export default function WritePage() {
     const baseUrl = normalizeBaseUrl(ms.baseUrl ?? "https://api.openai.com/v1");
     const apiKey = ms.apiKey ?? "";
 
-    let dna = ""; let soul = ""; let characters: Record<string, string>[] = [];
+    let dna = ""; let soul = ""; let relations = ""; let characters: Record<string, string>[] = [];
     try { const r = localStorage.getItem("writing-dna"); if (r) { const d = JSON.parse(r); dna = [d.languageStyle && `语言风格：${d.languageStyle}`, d.writingPrefs && `写作偏好：${d.writingPrefs}`, d.taboos && `禁忌：${d.taboos}`, d.references && `参考作品：${d.references}`, d.dynamics && `人物张力：${d.dynamics}`].filter(Boolean).join("\n"); } } catch {}
-    try { const r = localStorage.getItem("book-souls"); if (r) { const souls = JSON.parse(r); const s = Array.isArray(souls) ? souls.find((x: Record<string, string>) => x.bookId === activeBookId) : null; if (s) soul = [s.tone && `基调：${s.tone}`, s.dynamics && `人物动力：${s.dynamics}`, s.worldbuilding && `世界观：${s.worldbuilding}`, s.redlines && `红线：${s.redlines}`, s.keywords && `关键词：${s.keywords}`, s.aiReminders && `AI提醒：${s.aiReminders}`].filter(Boolean).join("\n"); } } catch {}
+    try { const r = localStorage.getItem("book-souls"); if (r) { const souls = JSON.parse(r); const s = Array.isArray(souls) ? souls.find((x: Record<string, string>) => x.bookId === activeBookId) : null; if (s) { soul = [s.worldview && `世界观：${s.worldview}`, s.styleGuide && `文风参考与指导：${s.styleGuide}`, s.materials && `写作素材参考：${s.materials}`, s.highlights && `主要梗点和看点：${s.highlights}`, s.forbidden && `禁区：${s.forbidden}`, s.notes && `其他补充：${s.notes}`].filter(Boolean).join("\n"); relations = s.relationsOverview || ""; } } } catch {}
     try { const r = localStorage.getItem("book-characters"); if (r) { const all = JSON.parse(r); characters = all.filter((c: Record<string, string>) => c.bookId === activeBookId); } } catch {}
 
     const charBlock = characters.length > 0 ? characters.map((c) => `${c.role ? `[${c.role}] ` : ""}${c.name}${c.alias ? `（${c.alias}）` : ""}${c.personality ? `：${c.personality}` : ""}`).join("\n") : "";
     let systemPrompt = "你是一位专业的中文小说写作助手，根据作者的风格设定和章节要求续写或扩写正文。直接输出正文内容，不要加标题或解释。";
     if (dna) systemPrompt += `\n\n【写作风格】\n${dna}`;
     if (soul) systemPrompt += `\n\n【书籍设定】\n${soul}`;
+    if (relations) systemPrompt += `\n\n【角色关系概况】\n${relations}`;
     if (charBlock) systemPrompt += `\n\n【主要角色】\n${charBlock}`;
 
     const userParts: string[] = [];
