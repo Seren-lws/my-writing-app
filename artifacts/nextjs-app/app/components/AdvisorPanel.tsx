@@ -101,13 +101,11 @@ function buildContextSections(
     ? characters
         .map((c) =>
           [
-            `• ${c.name}${c.alias ? `（${c.alias}）` : ""}${c.role ? ` ［${c.role}］` : ""}`,
-            c.age || c.gender
-              ? `  ${[c.age && `${c.age}岁`, c.gender].filter(Boolean).join("·")}`
-              : "",
-            c.personality ? `  性格：${c.personality}` : "",
-            c.speechPattern ? `  说话方式：${c.speechPattern}` : "",
-            c.aiNotes ? `  AI备注：${c.aiNotes}` : "",
+            `• ${c.name}${c.role ? ` ［${c.role}］` : ""}`,
+            c.identity ? `  身份：${c.identity}` : "",
+            c.appearance ? `  外貌性格：${c.appearance}` : "",
+            c.personality ? `  特点：${c.personality}` : "",
+            c.aiNotes ? `  其他：${c.aiNotes}` : "",
           ]
             .filter(Boolean)
             .join("\n"),
@@ -206,17 +204,12 @@ function buildAdvisorPrompt(
     if (fullChars.length > 0) {
       prompt += `\n\n## 人物档案`;
       for (const ch of fullChars) {
-        prompt += `\n\n### ${ch.name}${ch.alias ? `（${ch.alias}）` : ""}`;
+        prompt += `\n\n### ${ch.name}`;
         if (ch.role) prompt += `\n角色定位：${ch.role}`;
-        if (ch.age || ch.gender)
-          prompt += `\n基本信息：${[ch.age && `${ch.age}岁`, ch.gender].filter(Boolean).join("，")}`;
-        if (ch.appearance) prompt += `\n外貌：${ch.appearance}`;
-        if (ch.personality) prompt += `\n性格：${ch.personality}`;
-        if (ch.personalityOrigin) prompt += `\n性格形成原因：${ch.personalityOrigin}`;
-        if (ch.background) prompt += `\n成长背景：${ch.background}`;
-        if (ch.relationships) prompt += `\n关系网络：${ch.relationships}`;
-        if (ch.speechPattern) prompt += `\n说话方式：${ch.speechPattern}`;
-        if (ch.aiNotes) prompt += `\n给AI的特别说明：${ch.aiNotes}`;
+        if (ch.identity) prompt += `\n身份：${ch.identity}`;
+        if (ch.appearance) prompt += `\n外貌性格：${ch.appearance}`;
+        if (ch.personality) prompt += `\n特点：${ch.personality}`;
+        if (ch.aiNotes) prompt += `\n其他：${ch.aiNotes}`;
       }
     }
   }

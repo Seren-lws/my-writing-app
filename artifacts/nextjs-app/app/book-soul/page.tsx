@@ -20,16 +20,10 @@ type Character = {
   id: string;
   bookId: string;
   name: string;
-  alias: string;
-  age: string;
-  gender: string;
   role: string;
+  identity: string;
   appearance: string;
   personality: string;
-  personalityOrigin: string;
-  background: string;
-  relationships: string;
-  speechPattern: string;
   aiNotes: string;
   createdAt: string;
 };
@@ -50,13 +44,9 @@ const SOUL_FIELDS: { key: keyof typeof EMPTY_CARD; label: string; placeholder: s
 ];
 
 const CHAR_TEXT_FIELDS: { key: keyof Character; label: string; placeholder: string; rows: number }[] = [
-  { key: "appearance", label: "外貌描述", placeholder: "身形、五官、气质、标志性特征……", rows: 3 },
-  { key: "personality", label: "性格特点", placeholder: "核心性格、待人方式、在压力下的反应……", rows: 3 },
-  { key: "personalityOrigin", label: "性格形成原因", placeholder: "是什么经历塑造了这个人？童年、创伤、选择……", rows: 3 },
-  { key: "background", label: "成长背景 + 日常生活", placeholder: "家庭背景、成长经历、当下的日常状态……", rows: 3 },
-  { key: "relationships", label: "与其他角色的关系", placeholder: "比如：对 A 是单向暗恋，对 B 是互相利用……", rows: 3 },
-  { key: "speechPattern", label: "说话方式 / 口头禅", placeholder: "语气、习惯用词、惯用句式、沉默时的状态……", rows: 2 },
-  { key: "aiNotes", label: "AI 写这个角色时要注意的", placeholder: "比如：不要让他主动示弱，情绪只在细节里透出来……", rows: 2 },
+  { key: "appearance", label: "外貌性格", placeholder: "长相、身形、气质，加上核心性格、待人方式……", rows: 4 },
+  { key: "personality", label: "特点", placeholder: "标志性特点、习惯、口头禅、能力、癖好……", rows: 3 },
+  { key: "aiNotes", label: "其他", placeholder: "背景、与其他角色的关系，或想叮嘱 AI 的任何事……", rows: 3 },
 ];
 
 function emptyCharacter(bookId: string): Character {
@@ -64,16 +54,10 @@ function emptyCharacter(bookId: string): Character {
     id: crypto.randomUUID(),
     bookId,
     name: "",
-    alias: "",
-    age: "",
-    gender: "",
     role: "",
+    identity: "",
     appearance: "",
     personality: "",
-    personalityOrigin: "",
-    background: "",
-    relationships: "",
-    speechPattern: "",
     aiNotes: "",
     createdAt: new Date().toISOString(),
   };
@@ -289,38 +273,25 @@ export default function BookSoulPage() {
                     <div className="border-t border-[#e0c9a5] px-6 pb-6 pt-5">
 
                       {/* Basic info row */}
-                      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
-                        <div className="col-span-2 md:col-span-2">
+                      <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div>
                           <label className="mb-1 block text-xs font-medium text-[#9b744d]">姓名</label>
                           <input value={char.name} onChange={(e) => handleCharChange(char.id, "name", e.target.value)}
                             placeholder="角色姓名"
                             className={inlineInputClass + " w-full"} />
                         </div>
-                        <div className="col-span-2 md:col-span-1">
+                        <div>
                           <label className="mb-1 block text-xs font-medium text-[#9b744d]">角色定位</label>
                           <input value={char.role} onChange={(e) => handleCharChange(char.id, "role", e.target.value)}
                             placeholder="男一、女主…"
                             className={inlineInputClass + " w-full"} />
                         </div>
                         <div>
-                          <label className="mb-1 block text-xs font-medium text-[#9b744d]">年龄</label>
-                          <input value={char.age} onChange={(e) => handleCharChange(char.id, "age", e.target.value)}
-                            placeholder="28"
+                          <label className="mb-1 block text-xs font-medium text-[#9b744d]">身份</label>
+                          <input value={char.identity} onChange={(e) => handleCharChange(char.id, "identity", e.target.value)}
+                            placeholder="职业、社会身份…"
                             className={inlineInputClass + " w-full"} />
                         </div>
-                        <div>
-                          <label className="mb-1 block text-xs font-medium text-[#9b744d]">性别</label>
-                          <input value={char.gender} onChange={(e) => handleCharChange(char.id, "gender", e.target.value)}
-                            placeholder="男 / 女"
-                            className={inlineInputClass + " w-full"} />
-                        </div>
-                      </div>
-
-                      <div className="mb-5">
-                        <label className="mb-1 block text-xs font-medium text-[#9b744d]">别名 / 称呼</label>
-                        <input value={char.alias} onChange={(e) => handleCharChange(char.id, "alias", e.target.value)}
-                          placeholder="外号、代号、其他角色对他的称呼……"
-                          className={inlineInputClass + " w-full"} />
                       </div>
 
                       {/* Long text fields */}
