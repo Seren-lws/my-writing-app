@@ -315,6 +315,7 @@ export default function AdvisorPanel({
         baseUrl: normalizeBaseUrl(ms.baseUrl ?? "https://api.openai.com/v1"),
         apiKey: ms.apiKey ?? "",
         model: selectedModel,
+        maxTokens: Number(ms.maxTokens) || 8192,
         messages: [
           { role: "system", content: systemPrompt },
           ...baseMsgs.map((m) => ({ role: m.role, content: m.content })),

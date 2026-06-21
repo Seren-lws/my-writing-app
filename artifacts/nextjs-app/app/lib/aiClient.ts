@@ -16,12 +16,13 @@ export interface StreamChatOptions {
   apiKey: string;
   model: string;
   messages: ChatMessage[];
+  maxTokens?: number;
   signal?: AbortSignal;
   onDelta: (delta: string) => void;
 }
 
 export async function streamChat(options: StreamChatOptions): Promise<void> {
-  const { baseUrl, apiKey, model, messages, signal, onDelta } = options;
+  const { baseUrl, apiKey, model, messages, maxTokens, signal, onDelta } = options;
   const url = `${normalizeBaseUrl(baseUrl)}/chat/completions`;
 
   const res = await fetch(url, {
@@ -30,7 +31,12 @@ export async function streamChat(options: StreamChatOptions): Promise<void> {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({ model, messages, stream: true }),
+    body: JSON.stringify({
+      model,
+      messages,
+      stream: true,
+      ...(maxTokens ? { max_tokens: maxTokens } : {}),
+    }),
     signal,
   });
 
@@ -66,12 +72,13 @@ export interface ChatCompletionOptions {
   apiKey: string;
   model: string;
   messages: ChatMessage[];
+  maxTokens?: number;
 }
 
 export async function chatCompletion(
   options: ChatCompletionOptions,
 ): Promise<string> {
-  const { baseUrl, apiKey, model, messages } = options;
+  const { baseUrl, apiKey, model, messages, maxTokens } = options;
   const url = `${normalizeBaseUrl(baseUrl)}/chat/completions`;
 
   const res = await fetch(url, {
@@ -80,7 +87,12 @@ export async function chatCompletion(
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({ model, messages, stream: false }),
+    body: JSON.stringify({
+      model,
+      messages,
+      stream: false,
+      ...(maxTokens ? { max_tokens: maxTokens } : {}),
+    }),
   });
 
   if (!res.ok) {

@@ -218,7 +218,7 @@ export default function WritePage() {
   async function handleAIAnalysis() {
     if (analysisMode === "ai" && !aiAnalyzing) { setAnalysisMode("none"); return; }
     if (!content.trim()) return;
-    let ms: { baseUrl?: string; apiKey?: string; defaultModel?: string } = {};
+    let ms: { baseUrl?: string; apiKey?: string; defaultModel?: string; maxTokens?: number } = {};
     try { const raw = localStorage.getItem("ai-model-settings"); if (raw) ms = JSON.parse(raw); } catch {}
     if (!ms.baseUrl || !ms.apiKey) { alert("请先在模型设置中配置 API URL 和密钥"); return; }
 
@@ -238,6 +238,7 @@ export default function WritePage() {
         baseUrl: normalizeBaseUrl(ms.baseUrl ?? "https://api.openai.com/v1"),
         apiKey: ms.apiKey ?? "",
         model: selectedModel || ms.defaultModel || "",
+        maxTokens: Number(ms.maxTokens) || 8192,
         messages: [{ role: "system", content: system }, { role: "user", content: `请分析：\n\n${content.slice(0, 4000)}` }],
       });
       const m = text.match(/\{[\s\S]*\}/);
@@ -253,7 +254,7 @@ export default function WritePage() {
 
   async function handleAIWrite() {
     if (aiStreaming) { aiAbortRef.current?.abort(); return; }
-    let ms: { baseUrl?: string; apiKey?: string; defaultModel?: string } = {};
+    let ms: { baseUrl?: string; apiKey?: string; defaultModel?: string; maxTokens?: number } = {};
     try { const raw = localStorage.getItem("ai-model-settings"); if (raw) ms = JSON.parse(raw); } catch {}
     const baseUrl = normalizeBaseUrl(ms.baseUrl ?? "https://api.openai.com/v1");
     const apiKey = ms.apiKey ?? "";
@@ -286,6 +287,7 @@ export default function WritePage() {
         baseUrl,
         apiKey,
         model: selectedModel || ms.defaultModel || "",
+        maxTokens: Number(ms.maxTokens) || 8192,
         messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userParts.join("\n\n") }],
         signal: abort.signal,
         onDelta: (delta) => { accumulated += delta; setAiDraft(accumulated); },

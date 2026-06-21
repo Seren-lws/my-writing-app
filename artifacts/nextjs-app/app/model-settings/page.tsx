@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import DataBackup from "../components/DataBackup";
 
-type ModelSettings = { baseUrl: string; apiKey: string; defaultModel: string; modelsText: string };
-const DEFAULTS: ModelSettings = { baseUrl: "", apiKey: "", defaultModel: "", modelsText: "" };
+type ModelSettings = { baseUrl: string; apiKey: string; defaultModel: string; modelsText: string; maxTokens: number };
+const DEFAULTS: ModelSettings = { baseUrl: "", apiKey: "", defaultModel: "", modelsText: "", maxTokens: 8192 };
 
 export default function ModelSettingsPage() {
   const [settings, setSettings] = useState<ModelSettings>(DEFAULTS);
@@ -68,6 +68,14 @@ export default function ModelSettingsPage() {
             <label className={labelClass}>默认模型</label>
             <input type="text" value={settings.defaultModel} onChange={e => set("defaultModel", e.target.value)}
               placeholder="claude-opus-4-1" className={inputClass} />
+          </div>
+
+          {/* 最大回复长度 */}
+          <div className={cardClass}>
+            <label className={labelClass}>最大回复长度</label>
+            <input type="number" min={0} value={settings.maxTokens || ""} onChange={e => set("maxTokens", Number(e.target.value) || 0)}
+              placeholder="8192" className={inputClass} />
+            <p className="mt-2 text-xs text-[#9a7a58]">AI 单次回复的最大长度（token，1 token 约等于 0.5~1 个汉字）。调大可减少截断，留空或 0 用默认 8192。每个模型有各自上限，填太大可能报错。</p>
           </div>
 
           {/* 可选模型列表 */}
