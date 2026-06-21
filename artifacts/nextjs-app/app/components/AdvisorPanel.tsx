@@ -251,6 +251,8 @@ export default function AdvisorPanel({
   const [selectedModel, setSelectedModel] = useState("");
   const [showContext, setShowContext] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingText, setEditingText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -294,20 +296,15 @@ export default function AdvisorPanel({
     } catch {}
   }
 
-  async function sendMessage() {
-    const text = input.trim();
-    if (!text || streaming) return;
-    setInput("");
-
-    const userMsg: Message = { role: "user", content: text };
-    const nextMsgs = [...messages, userMsg];
-    saveMessages(nextMsgs);
+  async function runCompletion(baseMsgs: Message[]) {
+    if (streaming) return;
+    saveMessages(baseMsgs);
     setStreaming(true);
 
     const abort = new AbortController();
     abortRef.current = abort;
     let accumulated = "";
-    setMessages([...nextMsgs, { role: "assistant", content: "" }]);
+    setMessages([...baseMsgs, { role: "assistant", content: "" }]);
 
     try {
       const raw = localStorage.getItem("ai-model-settings");
@@ -320,26 +317,57 @@ export default function AdvisorPanel({
         model: selectedModel,
         messages: [
           { role: "system", content: systemPrompt },
-          ...nextMsgs.map((m) => ({ role: m.role, content: m.content })),
+          ...baseMsgs.map((m) => ({ role: m.role, content: m.content })),
         ],
         signal: abort.signal,
         onDelta: (delta) => {
           accumulated += delta;
-          setMessages([...nextMsgs, { role: "assistant", content: accumulated }]);
+          setMessages([...baseMsgs, { role: "assistant", content: accumulated }]);
         },
       });
     } catch (e: unknown) {
       if (e instanceof Error && e.name !== "AbortError") {
         accumulated = accumulated || "（请求出错，请检查模型设置）";
-        setMessages([...nextMsgs, { role: "assistant", content: accumulated }]);
+        setMessages([...baseMsgs, { role: "assistant", content: accumulated }]);
       }
     } finally {
-      saveMessages([
-        ...nextMsgs,
-        { role: "assistant", content: accumulated },
-      ]);
+      saveMessages([...baseMsgs, { role: "assistant", content: accumulated }]);
       setStreaming(false);
     }
+  }
+
+  function sendMessage() {
+    const text = input.trim();
+    if (!text || streaming) return;
+    setInput("");
+    runCompletion([...messages, { role: "user", content: text }]);
+  }
+
+  function regenerate(index: number) {
+    if (streaming) return;
+    runCompletion(messages.slice(0, index));
+  }
+
+  function startEdit(index: number) {
+    setEditingIndex(index);
+    setEditingText(messages[index].content);
+  }
+
+  function cancelEdit() {
+    setEditingIndex(null);
+    setEditingText("");
+  }
+
+  function submitEdit() {
+    const text = editingText.trim();
+    if (!text || editingIndex === null || streaming) return;
+    const base: Message[] = [
+      ...messages.slice(0, editingIndex),
+      { role: "user", content: text },
+    ];
+    setEditingIndex(null);
+    setEditingText("");
+    runCompletion(base);
   }
 
   function handleClear() {
@@ -433,30 +461,54 @@ export default function AdvisorPanel({
             有什么剧情想聊？军师随时在线。
           </p>
         )}
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-6 ${
-                m.role === "user"
-                  ? "whitespace-pre-wrap bg-[#6e4b2d] text-amber-50"
-                  : "border border-[#e0c9a5] bg-[#fff8eb] text-[#4f3524]"
-              }`}
-            >
-              {m.role === "user" ? (
-                m.content
-              ) : m.content ? (
-                <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={mdComponents}>
-                  {m.content}
-                </ReactMarkdown>
-              ) : streaming && i === messages.length - 1 ? (
-                "▍"
-              ) : null}
+        {messages.map((m, i) => {
+          if (m.role === "user" && editingIndex === i) {
+            return (
+              <div key={i} className="flex flex-col items-end gap-1.5">
+                <textarea
+                  value={editingText}
+                  onChange={(e) => setEditingText(e.target.value)}
+                  rows={3}
+                  className="w-[85%] resize-none rounded-2xl border border-[#d8b98f] bg-[#fff8eb] px-4 py-2.5 text-sm leading-6 text-[#4f3524] outline-none"
+                />
+                <div className="flex gap-2">
+                  <button onClick={cancelEdit} className="rounded-full border border-[#e0c9a5] px-3 py-1 text-xs text-[#a98a68] transition hover:text-[#6e4b2d]">取消</button>
+                  <button onClick={submitEdit} disabled={!editingText.trim()} className="rounded-full bg-[#6e4b2d] px-4 py-1 text-xs text-amber-50 transition hover:bg-[#58391f] disabled:opacity-50">重发</button>
+                </div>
+              </div>
+            );
+          }
+          return (
+            <div key={i} className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}>
+              <div
+                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-6 ${
+                  m.role === "user"
+                    ? "whitespace-pre-wrap bg-[#6e4b2d] text-amber-50"
+                    : "border border-[#e0c9a5] bg-[#fff8eb] text-[#4f3524]"
+                }`}
+              >
+                {m.role === "user" ? (
+                  m.content
+                ) : m.content ? (
+                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={mdComponents}>
+                    {m.content}
+                  </ReactMarkdown>
+                ) : streaming && i === messages.length - 1 ? (
+                  "▍"
+                ) : null}
+              </div>
+              {!streaming && (m.role === "user" || m.content) && (
+                <div className="mt-1 flex gap-3 px-1 text-[11px] text-[#a98a68]">
+                  {m.role === "user" ? (
+                    <button onClick={() => startEdit(i)} className="transition hover:text-[#6e4b2d]">编辑</button>
+                  ) : (
+                    <button onClick={() => regenerate(i)} className="transition hover:text-[#6e4b2d]">重新生成</button>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div ref={bottomRef} />
       </div>
 
