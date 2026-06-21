@@ -54,12 +54,13 @@ function buildContextSections(
         : null;
       if (s) {
         soulText = [
-          s.tone && `基调：${s.tone}`,
-          s.dynamics && `人物动力：${s.dynamics}`,
-          s.worldbuilding && `世界观：${s.worldbuilding}`,
-          s.redlines && `红线：${s.redlines}`,
-          s.keywords && `关键词：${s.keywords}`,
-          s.aiReminders && `AI提醒：${s.aiReminders}`,
+          s.worldview && `世界观：${s.worldview}`,
+          s.styleGuide && `文风参考与指导：${s.styleGuide}`,
+          s.materials && `写作素材参考：${s.materials}`,
+          s.highlights && `主要梗点和看点：${s.highlights}`,
+          s.forbidden && `禁区：${s.forbidden}`,
+          s.notes && `其他补充：${s.notes}`,
+          s.relationsOverview && `角色关系概况：${s.relationsOverview}`,
         ]
           .filter(Boolean)
           .join("\n");
@@ -333,10 +334,10 @@ export default function AdvisorPanel({
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#261609]">
+    <div className="flex h-full flex-col bg-[#f8f0df]">
       {/* Toolbar */}
-      <div className="flex items-center justify-between border-b border-[#4c2c14] px-4 py-2">
-        <span className="text-sm font-medium text-[#d4a05a]">写作军师</span>
+      <div className="flex items-center justify-between border-b border-[#e0c9a5] px-4 py-2">
+        <span className="text-sm font-medium text-[#6e4b2d]">写作军师</span>
         <div className="flex items-center gap-3">
           {modelOptions.length > 0 && (
             <select
@@ -345,7 +346,7 @@ export default function AdvisorPanel({
                 setSelectedModel(e.target.value);
                 try { localStorage.setItem(modelKey, e.target.value); } catch {}
               }}
-              className="rounded-lg border border-[#6a4020] bg-[#311d0c] px-2 py-1 text-xs text-[#c8a878] outline-none"
+              className="rounded-lg border border-[#d8b98f] bg-[#fff8eb] px-2 py-1 text-xs text-[#6e4b2d] outline-none"
             >
               {modelOptions.map((m) => (
                 <option key={m} value={m}>{m}</option>
@@ -355,13 +356,13 @@ export default function AdvisorPanel({
           <button
             onClick={() => setShowContext((v) => !v)}
             title="查看本次注入的上下文"
-            className={`text-xs transition ${showContext ? "text-[#d4a05a]" : "text-[#8a6040] hover:text-[#c8a878]"}`}
+            className={`text-xs transition ${showContext ? "text-[#6e4b2d]" : "text-[#a98a68] hover:text-[#6e4b2d]"}`}
           >
             {showContext ? "收起上下文 ↑" : "上下文预览"}
           </button>
           <button
             onClick={handleClear}
-            className="text-xs text-[#8a6040] transition hover:text-[#c8a878]"
+            className="text-xs text-[#a98a68] transition hover:text-[#6e4b2d]"
           >
             清空
           </button>
@@ -370,32 +371,32 @@ export default function AdvisorPanel({
 
       {/* Context preview panel */}
       {showContext && (
-        <div className="shrink-0 overflow-y-auto border-b border-[#4c2c14] bg-[#1c1006]" style={{ maxHeight: "55%" }}>
+        <div className="shrink-0 overflow-y-auto border-b border-[#e0c9a5] bg-[#fbf3e2]" style={{ maxHeight: "55%" }}>
           <div className="px-4 py-3 space-y-1.5">
-            <p className="mb-2 text-[10px] tracking-widest text-[#6a4020] uppercase">AI 读取的上下文（与实际发送一致）</p>
+            <p className="mb-2 text-[10px] tracking-widest text-[#a98a68] uppercase">AI 读取的上下文（与实际发送一致）</p>
             {contextSections.map(({ label, icon, content }) => {
               const isOpen = !!openSections[label];
               const isEmpty = !content.trim();
               return (
-                <div key={label} className="rounded-xl border border-[#3a2010] bg-[#261609] overflow-hidden">
+                <div key={label} className="rounded-xl border border-[#e0c9a5] bg-[#fff8eb] overflow-hidden">
                   <button
                     onClick={() => !isEmpty && toggleSection(label)}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-left transition ${isEmpty ? "cursor-default" : "hover:bg-[#311d0c]"}`}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left transition ${isEmpty ? "cursor-default" : "hover:bg-[#fff2e0]"}`}
                   >
                     <span className="text-sm">{icon}</span>
-                    <span className="flex-1 text-xs font-medium text-[#c8a878]">{label}</span>
+                    <span className="flex-1 text-xs font-medium text-[#6e4b2d]">{label}</span>
                     {isEmpty ? (
-                      <span className="text-[10px] text-[#4a2c10] rounded-full border border-[#3a2010] px-2 py-0.5">未填写</span>
+                      <span className="text-[10px] text-[#b89a78] rounded-full border border-[#e0c9a5] px-2 py-0.5">未填写</span>
                     ) : (
-                      <span className="text-[10px] text-[#6a8040] rounded-full border border-[#3a4010] px-2 py-0.5">已注入</span>
+                      <span className="text-[10px] text-[#5d7a3a] rounded-full border border-[#cfdcb5] px-2 py-0.5">已注入</span>
                     )}
                     {!isEmpty && (
-                      <span className="text-[#6a4020] text-xs ml-1">{isOpen ? "▲" : "▼"}</span>
+                      <span className="text-[#a98a68] text-xs ml-1">{isOpen ? "▲" : "▼"}</span>
                     )}
                   </button>
                   {isOpen && !isEmpty && (
-                    <div className="border-t border-[#3a2010] px-3 py-2.5">
-                      <pre className="whitespace-pre-wrap font-sans text-xs leading-5 text-[#b89060]">{content}</pre>
+                    <div className="border-t border-[#ecdcc0] px-3 py-2.5">
+                      <pre className="whitespace-pre-wrap font-sans text-xs leading-5 text-[#6e5038]">{content}</pre>
                     </div>
                   )}
                 </div>
@@ -408,7 +409,7 @@ export default function AdvisorPanel({
       {/* Messages */}
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
         {messages.length === 0 && (
-          <p className="pt-4 text-center text-sm text-[#8a6040]">
+          <p className="pt-4 text-center text-sm text-[#a98a68]">
             有什么剧情想聊？军师随时在线。
           </p>
         )}
@@ -421,7 +422,7 @@ export default function AdvisorPanel({
               className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-6 ${
                 m.role === "user"
                   ? "bg-[#6e4b2d] text-amber-50"
-                  : "border border-[#4c2c14] bg-[#311d0c] text-[#f0e6d3]"
+                  : "border border-[#e0c9a5] bg-[#fff8eb] text-[#4f3524]"
               }`}
             >
               {m.content ||
@@ -433,8 +434,8 @@ export default function AdvisorPanel({
       </div>
 
       {/* Input */}
-      <div className="border-t border-[#4c2c14] p-3">
-        <div className="flex items-end gap-2 rounded-2xl border border-[#6a4020] bg-[#311d0c] px-4 py-2">
+      <div className="border-t border-[#e0c9a5] p-3">
+        <div className="flex items-end gap-2 rounded-2xl border border-[#d8b98f] bg-[#fff8eb] px-4 py-2">
           <textarea
             rows={2}
             value={input}
@@ -446,7 +447,7 @@ export default function AdvisorPanel({
               }
             }}
             placeholder="跟军师说…（Enter 发送，Shift+Enter 换行）"
-            className="flex-1 resize-none bg-transparent text-sm leading-6 text-[#f0e6d3] outline-none placeholder:text-[#5a3820]"
+            className="flex-1 resize-none bg-transparent text-sm leading-6 text-[#4f3524] outline-none placeholder:text-[#c7a984]"
           />
           <button
             onClick={sendMessage}
