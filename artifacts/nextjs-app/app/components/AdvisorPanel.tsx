@@ -212,12 +212,14 @@ type Props = {
   bookId: string;
   chapters: Chapter[];
   activeChapterId: string;
+  onAppend?: (text: string) => void;
 };
 
 export default function AdvisorPanel({
   bookId,
   chapters,
   activeChapterId,
+  onAppend,
 }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -229,7 +231,10 @@ export default function AdvisorPanel({
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingText, setEditingText] = useState("");
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [appendedIndex, setAppendedIndex] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const atBottomRef = useRef(true);
   const abortRef = useRef<AbortController | null>(null);
 
   const historyKey = `writing-advisor-${bookId}`;
@@ -262,8 +267,14 @@ export default function AdvisorPanel({
   }, [historyKey, modelKey]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (atBottomRef.current) bottomRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages]);
+
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  }
 
   function saveMessages(msgs: Message[]) {
     setMessages(msgs);
@@ -331,6 +342,14 @@ export default function AdvisorPanel({
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 1500);
+  }
+
+  function appendMessage(index: number) {
+    const text = messages[index]?.content;
+    if (!text || !onAppend) return;
+    onAppend(text);
+    setAppendedIndex(index);
+    setTimeout(() => setAppendedIndex(null), 1500);
   }
 
   function startEdit(index: number) {
@@ -440,7 +459,7 @@ export default function AdvisorPanel({
       )}
 
       {/* Messages */}
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
+      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
         {messages.length === 0 && (
           <p className="pt-4 text-center text-sm text-[#a98a68]">
             有什么剧情想聊？军师随时在线。
@@ -488,6 +507,7 @@ export default function AdvisorPanel({
                     <button onClick={() => startEdit(i)} className="transition hover:text-[#6e4b2d]">编辑</button>
                   ) : (
                     <>
+                      {onAppend && <button onClick={() => appendMessage(i)} className="transition hover:text-[#6e4b2d]">{appendedIndex === i ? "已追加 ✓" : "追加到正文"}</button>}
                       <button onClick={() => copyMessage(i)} className="transition hover:text-[#6e4b2d]">{copiedIndex === i ? "已复制 ✓" : "复制"}</button>
                       <button onClick={() => regenerate(i)} className="transition hover:text-[#6e4b2d]">重新生成</button>
                     </>

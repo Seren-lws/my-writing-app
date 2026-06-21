@@ -338,6 +338,12 @@ export default function WritePage() {
     setAiDraft("");
   }
 
+  function appendFromAdvisor(text: string) {
+    if (!text.trim()) return;
+    const sep = content.trim() ? "\n\n" : "";
+    updateActiveChapter({ content: content + sep + text });
+  }
+
   if (!ready) return null;
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -467,7 +473,7 @@ export default function WritePage() {
           )}
           {mobileTab === "advisor" && (
             <div className="h-full">
-              <AdvisorPanel bookId={activeBookId} chapters={bookChapters} activeChapterId={activeChapterId} />
+              <AdvisorPanel bookId={activeBookId} chapters={bookChapters} activeChapterId={activeChapterId} onAppend={appendFromAdvisor} />
             </div>
           )}
         </div>
@@ -549,7 +555,7 @@ export default function WritePage() {
           </div>
           {advisorOpen && (
             <div className="h-[68vh] min-h-96 shrink-0 border-t border-[#e0d4c0]">
-              <AdvisorPanel bookId={activeBookId} chapters={bookChapters} activeChapterId={activeChapterId} />
+              <AdvisorPanel bookId={activeBookId} chapters={bookChapters} activeChapterId={activeChapterId} onAppend={appendFromAdvisor} />
             </div>
           )}
         </section>
