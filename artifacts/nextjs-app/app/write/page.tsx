@@ -60,6 +60,7 @@ export default function WritePage() {
   const [aiStreaming, setAiStreaming] = useState(false);
   const [mobileTab, setMobileTab] = useState<"write" | "chapters" | "tools" | "advisor">("write");
   const [leftOpen, setLeftOpen] = useState(true);
+  const [rightOpen, setRightOpen] = useState(true);
 
   // Analysis
   const [analysisMode, setAnalysisMode] = useState<"none" | "repeat" | "ai">("none");
@@ -444,7 +445,11 @@ export default function WritePage() {
       </div>
 
       {/* ── Desktop 3-column ───────────────────────────────────────────────── */}
-      <div className={`hidden flex-1 md:grid md:overflow-hidden ${leftOpen ? "md:grid-cols-[220px_1fr_420px]" : "md:grid-cols-[28px_1fr_420px]"}`}>
+      <div className={`hidden flex-1 md:grid md:overflow-hidden ${
+        leftOpen
+          ? rightOpen ? "md:grid-cols-[220px_1fr_420px]" : "md:grid-cols-[220px_1fr_28px]"
+          : rightOpen ? "md:grid-cols-[28px_1fr_420px]" : "md:grid-cols-[28px_1fr_28px]"
+      }`}>
         {/* Left sidebar */}
         <ChapterSidebar
           bookChapters={bookChapters}
@@ -501,14 +506,20 @@ export default function WritePage() {
             </button>
           </div>
           {advisorOpen && (
-            <div className="h-96 shrink-0 border-t border-[#e0d4c0]">
+            <div className="h-[68vh] min-h-96 shrink-0 border-t border-[#e0d4c0]">
               <AdvisorPanel bookId={activeBookId} chapters={bookChapters} activeChapterId={activeChapterId} />
             </div>
           )}
         </section>
 
         {/* Right sidebar */}
-        <aside className="flex flex-col gap-5 overflow-y-auto border-l border-[#e0d4c0] bg-[#faf7f2] p-5">
+        <aside className={`flex flex-col border-l border-[#e0d4c0] bg-[#faf7f2] overflow-hidden ${rightOpen ? "gap-5 overflow-y-auto p-5" : "items-center pt-4"}`}>
+          {rightOpen ? (
+          <>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-[#7c5038]">灵感 · 扩写</p>
+            <button onClick={() => setRightOpen(false)} title="收起" className="rounded-lg px-2 py-1 text-xs text-[#9a7a58] transition hover:bg-[#f0ead8] hover:text-[#7c5038]">›</button>
+          </div>
           {/* Quick note */}
           <QuickNoteBox
             value={quickNote}
@@ -576,6 +587,13 @@ export default function WritePage() {
               onLocate={openFindWith}
             />
           </section>
+          </>
+          ) : (
+            <button onClick={() => setRightOpen(true)} title="展开灵感与扩写" className="flex flex-col items-center gap-2 text-[#9a7a58] transition hover:text-[#7c5038]">
+              <span className="text-base leading-none">‹</span>
+              <span className="text-[10px] [writing-mode:vertical-rl]">灵感 · 扩写</span>
+            </button>
+          )}
         </aside>
       </div>
 

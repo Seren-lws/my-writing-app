@@ -1,7 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { normalizeBaseUrl, streamChat } from "../lib/aiClient";
+
+const mdComponents: Components = {
+  p: ({ children }) => <p className="mb-2 leading-6 last:mb-0">{children}</p>,
+  ul: ({ children }) => <ul className="mb-2 list-disc space-y-1 pl-5 last:mb-0">{children}</ul>,
+  ol: ({ children }) => <ol className="mb-2 list-decimal space-y-1 pl-5 last:mb-0">{children}</ol>,
+  li: ({ children }) => <li className="leading-6">{children}</li>,
+  strong: ({ children }) => <strong className="font-semibold text-[#3a2516]">{children}</strong>,
+  em: ({ children }) => <em className="italic">{children}</em>,
+  h1: ({ children }) => <h1 className="mb-2 mt-1 text-base font-semibold text-[#3a2516] first:mt-0">{children}</h1>,
+  h2: ({ children }) => <h2 className="mb-2 mt-1 text-sm font-semibold text-[#3a2516] first:mt-0">{children}</h2>,
+  h3: ({ children }) => <h3 className="mb-1 mt-1 text-sm font-semibold text-[#5a3f28] first:mt-0">{children}</h3>,
+  blockquote: ({ children }) => <blockquote className="my-2 border-l-2 border-[#d8b98f] pl-3 italic text-[#6e5038]">{children}</blockquote>,
+  a: ({ children, href }) => <a href={href} target="_blank" rel="noreferrer" className="text-[#9b6a3a] underline">{children}</a>,
+  code: ({ children }) => <code className="rounded bg-[#f0e6d3] px-1 py-0.5 text-[13px] text-[#6e4b2d]">{children}</code>,
+  pre: ({ children }) => <pre className="my-2 overflow-x-auto rounded-lg bg-[#f0e6d3] p-3 text-[13px] leading-5 text-[#5a3f28]">{children}</pre>,
+  hr: () => <hr className="my-2 border-[#e0c9a5]" />,
+};
 
 type Chapter = {
   id: string;
@@ -419,14 +439,21 @@ export default function AdvisorPanel({
             className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-6 ${
+              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-6 ${
                 m.role === "user"
-                  ? "bg-[#6e4b2d] text-amber-50"
+                  ? "whitespace-pre-wrap bg-[#6e4b2d] text-amber-50"
                   : "border border-[#e0c9a5] bg-[#fff8eb] text-[#4f3524]"
               }`}
             >
-              {m.content ||
-                (streaming && i === messages.length - 1 ? "▍" : "")}
+              {m.role === "user" ? (
+                m.content
+              ) : m.content ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={mdComponents}>
+                  {m.content}
+                </ReactMarkdown>
+              ) : streaming && i === messages.length - 1 ? (
+                "▍"
+              ) : null}
             </div>
           </div>
         ))}
@@ -437,7 +464,7 @@ export default function AdvisorPanel({
       <div className="border-t border-[#e0c9a5] p-3">
         <div className="flex items-end gap-2 rounded-2xl border border-[#d8b98f] bg-[#fff8eb] px-4 py-2">
           <textarea
-            rows={2}
+            rows={3}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
