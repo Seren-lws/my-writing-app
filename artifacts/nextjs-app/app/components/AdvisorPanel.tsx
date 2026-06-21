@@ -253,6 +253,7 @@ export default function AdvisorPanel({
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingText, setEditingText] = useState("");
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -347,6 +348,14 @@ export default function AdvisorPanel({
   function regenerate(index: number) {
     if (streaming) return;
     runCompletion(messages.slice(0, index));
+  }
+
+  function copyMessage(index: number) {
+    const text = messages[index]?.content;
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 1500);
   }
 
   function startEdit(index: number) {
@@ -503,7 +512,10 @@ export default function AdvisorPanel({
                   {m.role === "user" ? (
                     <button onClick={() => startEdit(i)} className="transition hover:text-[#6e4b2d]">编辑</button>
                   ) : (
-                    <button onClick={() => regenerate(i)} className="transition hover:text-[#6e4b2d]">重新生成</button>
+                    <>
+                      <button onClick={() => copyMessage(i)} className="transition hover:text-[#6e4b2d]">{copiedIndex === i ? "已复制 ✓" : "复制"}</button>
+                      <button onClick={() => regenerate(i)} className="transition hover:text-[#6e4b2d]">重新生成</button>
+                    </>
                   )}
                 </div>
               )}
