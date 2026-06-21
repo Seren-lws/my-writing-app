@@ -6,6 +6,9 @@ import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import { normalizeBaseUrl, streamChat } from "../lib/aiClient";
 
+// 军师聊天只把最近这么多条历史发给 AI（界面仍保留完整记录），防止上下文越聊越爆
+const MAX_ADVISOR_HISTORY = 20;
+
 const mdComponents: Components = {
   p: ({ children }) => <p className="mb-2 leading-6 last:mb-0">{children}</p>,
   ul: ({ children }) => <ul className="mb-2 list-disc space-y-1 pl-5 last:mb-0">{children}</ul>,
@@ -291,7 +294,7 @@ export default function AdvisorPanel({
         maxTokens: Number(ms.maxTokens) || 8192,
         messages: [
           { role: "system", content: systemPrompt },
-          ...baseMsgs.map((m) => ({ role: m.role, content: m.content })),
+          ...baseMsgs.slice(-MAX_ADVISOR_HISTORY).map((m) => ({ role: m.role, content: m.content })),
         ],
         signal: abort.signal,
         onDelta: (delta) => {
