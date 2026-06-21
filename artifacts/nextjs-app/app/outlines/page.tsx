@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { normalizeBaseUrl, chatCompletion } from "../lib/aiClient";
+
+const SUMMARY_SYS =
+  "你是专业的小说编辑。把用户给的章节正文总结成简洁的章节大纲：用几个要点列出关键情节、转折和人物动向。直接输出大纲本身，不要任何解释或开场白。";
 
 type Chapter = {
   id: string;
@@ -25,6 +29,7 @@ export default function OutlinesPage() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [savedAt, setSavedAt] = useState("");
   const [copied, setCopied] = useState(false);
+  const [summarizing, setSummarizing] = useState<Record<string, boolean>>({});
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -60,6 +65,32 @@ export default function OutlinesPage() {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  }
+
+  async function summarize(id: string) {
+    const ch = chapters.find((c) => c.id === id);
+    if (!ch || !ch.content.trim()) { alert("这一章还没有正文，没法总结哦~"); return; }
+    if (ch.outline.trim() && !confirm("这一章已经有大纲了，用 AI 总结覆盖它？")) return;
+    setSummarizing((s) => ({ ...s, [id]: true }));
+    try {
+      let ms: { baseUrl?: string; apiKey?: string; defaultModel?: string; maxTokens?: number } = {};
+      try { const r = localStorage.getItem("ai-model-settings"); if (r) ms = JSON.parse(r); } catch {}
+      const text = await chatCompletion({
+        baseUrl: normalizeBaseUrl(ms.baseUrl ?? "https://api.openai.com/v1"),
+        apiKey: ms.apiKey ?? "",
+        model: ms.defaultModel ?? "",
+        maxTokens: Number(ms.maxTokens) || 8192,
+        messages: [
+          { role: "system", content: SUMMARY_SYS },
+          { role: "user", content: ch.content.slice(0, 8000) },
+        ],
+      });
+      if (text.trim()) updateOutline(id, text.trim());
+    } catch {
+      alert("总结失败了，检查一下模型设置（API 地址 / Key）~");
+    } finally {
+      setSummarizing((s) => ({ ...s, [id]: false }));
+    }
   }
 
   if (!ready) return null;
@@ -104,6 +135,10 @@ export default function OutlinesPage() {
                   <Link href={`/write?bookId=${bookId}`} className="text-sm font-medium text-[#4f3524] transition hover:text-[#9b6a3a]">
                     {c.title || "未命名章节"}
                   </Link>
+                  <button onClick={() => summarize(c.id)} disabled={!!summarizing[c.id]}
+                    className="ml-auto rounded-full border border-[#e0c9a5] px-3 py-1 text-xs text-[#9b744d] transition hover:bg-[#fff2e0] hover:text-[#6e4b2d] disabled:opacity-50">
+                    {summarizing[c.id] ? "总结中…" : "✨ AI 总结本章"}
+                  </button>
                 </div>
                 <textarea rows={4} value={c.outline} onChange={(e) => updateOutline(c.id, e.target.value)}
                   placeholder="这一章要写什么？几个关键节拍或场景……"

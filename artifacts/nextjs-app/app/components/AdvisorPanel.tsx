@@ -113,57 +113,14 @@ function buildContextSections(
         .join("\n\n")
     : "";
 
-  // 4. Current chapter
-  const bookChapters = chapters.filter((c) => c.bookId === bookId);
-  const activeIdx = bookChapters.findIndex((c) => c.id === activeChapterId);
-  const cur = bookChapters[activeIdx];
-  let curText = "";
-  if (cur) {
-    curText = `标题：${cur.title || "（未命名）"}`;
-    if (cur.outline) curText += `\n大纲：${cur.outline}`;
-    if (cur.content) {
-      const preview = cur.content.slice(0, 200);
-      curText += `\n正文前 200 字：\n${preview}${cur.content.length > 200 ? "…（共 " + cur.content.replace(/\s/g, "").length + " 字）" : ""}`;
-    } else {
-      curText += "\n正文：（暂无）";
-    }
-  }
-
-  // 5. Recent chapters (up to 2 before current)
-  const recentList = bookChapters.slice(Math.max(0, activeIdx - 2), activeIdx);
-  const recentText = recentList.length > 0
-    ? recentList
-        .map((c) => {
-          const preview = c.content.slice(0, 120);
-          return `【${c.title || "未命名"}】\n${preview}${c.content.length > 120 ? "…（共 " + c.content.replace(/\s/g, "").length + " 字）" : "（共 " + c.content.replace(/\s/g, "").length + " 字）"}`;
-        })
-        .join("\n\n")
-    : "";
-
-  return [
-    { label: "写作 DNA", icon: "🧬", content: dnaText },
-    { label: "书籍灵魂卡", icon: "🪬", content: soulText },
-    { label: "人物档案", icon: "👥", content: charText },
-    { label: "当前章节", icon: "📄", content: curText },
-    { label: "近期章节（传入上文）", icon: "📜", content: recentText },
-  ];
-}
-
-function buildAdvisorPrompt(
-  bookId: string,
-  chapters: Chapter[],
-  activeChapterId: string,
-): string {
-  const sections = buildContextSections(bookId, chapters, activeChapterId);
-  const [dna, soul, chars, cur, recent] = sections.map((s) => s.content);
-
-  let adultSettings = "";
+  // 4. Adult settings
+  let adultText = "";
   try {
     const raw = localStorage.getItem("adult-content-settings");
     if (raw) {
       const a = JSON.parse(raw);
       if (a.enabled) {
-        adultSettings = [
+        adultText = [
           a.rating && `分级：${a.rating}`,
           a.writingStyle && `描写风格：${a.writingStyle}`,
           a.relationBoundary && `关系边界：${a.relationBoundary}`,
@@ -178,55 +135,71 @@ function buildAdvisorPrompt(
     }
   } catch {}
 
+  // 5. Chapters
   const bookChapters = chapters.filter((c) => c.bookId === bookId);
   const activeIdx = bookChapters.findIndex((c) => c.id === activeChapterId);
-  const currentChapter = bookChapters[activeIdx];
 
-  const chapterMap = bookChapters
-    .map(
-      (c, i) =>
-        `第${i + 1}章《${c.title || "未命名"}》${c.outline ? `\n  大纲：${c.outline}` : ""}`,
-    )
+  const chapterMapText = bookChapters
+    .map((c, i) => `第${i + 1}章《${c.title || "未命名"}》${c.outline ? `\n  大纲：${c.outline}` : ""}`)
     .join("\n");
+
+  // 上一章完整 + 更早章节摘要
+  const start = Math.max(0, activeIdx - 2);
+  const recentList = activeIdx > 0 ? bookChapters.slice(start, activeIdx) : [];
+  const recentText = recentList
+    .map((c, j) => {
+      const isPrev = start + j === activeIdx - 1;
+      const wc = c.content.replace(/\s/g, "").length;
+      if (!c.content) return `【${c.title || "未命名"}】（暂无正文）`;
+      if (isPrev) return `【${c.title || "未命名"}】（上一章 · 完整 ${wc} 字）\n${c.content}`;
+      return `【${c.title || "未命名"}】（摘要，共 ${wc} 字）\n${c.content.slice(0, 150)}${c.content.length > 150 ? "…" : ""}`;
+    })
+    .join("\n\n");
+
+  // 当前章节（完整正文）
+  const cur = bookChapters[activeIdx];
+  let curText = "";
+  if (cur) {
+    curText = `标题：${cur.title || "（未命名）"}`;
+    if (cur.outline) curText += `\n大纲：${cur.outline}`;
+    curText += cur.content
+      ? `\n正文（${cur.content.replace(/\s/g, "").length} 字）：\n${cur.content}`
+      : "\n正文：（暂无）";
+  }
+
+  return [
+    { label: "写作 DNA", icon: "🧬", content: dnaText },
+    { label: "书籍灵魂卡", icon: "🪬", content: soulText },
+    { label: "成人创作设置", icon: "🔞", content: adultText },
+    { label: "人物档案", icon: "👥", content: charText },
+    { label: "全书章节目录", icon: "🗂️", content: chapterMapText },
+    { label: "近期章节正文", icon: "📜", content: recentText },
+    { label: "当前章节", icon: "📄", content: curText },
+  ];
+}
+
+function buildAdvisorPrompt(
+  bookId: string,
+  chapters: Chapter[],
+  activeChapterId: string,
+): string {
+  const sections = buildContextSections(bookId, chapters, activeChapterId);
+  const titleMap: Record<string, string> = {
+    "写作 DNA": "作者写作风格",
+    "书籍灵魂卡": "书籍灵魂",
+    "成人创作设置": "成人创作设置",
+    "人物档案": "人物档案",
+    "全书章节目录": "全书章节目录",
+    "近期章节正文": "近期章节正文",
+    "当前章节": "当前章节",
+  };
 
   let prompt =
     `你是这本书的写作军师，深度了解这本书的一切，帮助作者策划剧情、构建结构、分析人物、触发灵感。` +
     `你的风格是：直接、有洞察力、像一个真正懂创作的编辑朋友。`;
 
-  if (soul) prompt += `\n\n## 书籍灵魂\n${soul}`;
-  if (dna) prompt += `\n\n## 作者写作风格\n${dna}`;
-  if (adultSettings) prompt += `\n\n## 成人创作设置\n${adultSettings}`;
-
-  if (chars) {
-    // Re-read full character data for the complete prompt
-    let fullChars: Record<string, string>[] = [];
-    try {
-      const raw = localStorage.getItem("book-characters");
-      if (raw) {
-        const all = JSON.parse(raw);
-        fullChars = all.filter((c: Record<string, string>) => c.bookId === bookId);
-      }
-    } catch {}
-    if (fullChars.length > 0) {
-      prompt += `\n\n## 人物档案`;
-      for (const ch of fullChars) {
-        prompt += `\n\n### ${ch.name}`;
-        if (ch.role) prompt += `\n角色定位：${ch.role}`;
-        if (ch.identity) prompt += `\n身份：${ch.identity}`;
-        if (ch.appearance) prompt += `\n外貌性格：${ch.appearance}`;
-        if (ch.personality) prompt += `\n特点：${ch.personality}`;
-        if (ch.aiNotes) prompt += `\n其他：${ch.aiNotes}`;
-      }
-    }
-  }
-
-  if (chapterMap) prompt += `\n\n## 全书章节目录\n${chapterMap}`;
-  if (recent) prompt += `\n\n## 近期章节正文\n${recent}`;
-  if (currentChapter) {
-    prompt += `\n\n## 当前章节《${currentChapter.title}》`;
-    if (currentChapter.outline) prompt += `\n大纲：${currentChapter.outline}`;
-    if (currentChapter.content)
-      prompt += `\n\n正文：\n${currentChapter.content}`;
+  for (const s of sections) {
+    if (s.content) prompt += `\n\n## ${titleMap[s.label] ?? s.label}\n${s.content}`;
   }
 
   return prompt;
