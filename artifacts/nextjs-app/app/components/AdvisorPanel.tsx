@@ -159,16 +159,22 @@ function buildAdvisorPrompt(
 
   let adultSettings = "";
   try {
-    const raw = localStorage.getItem(`adult-settings-${bookId}`);
+    const raw = localStorage.getItem("adult-content-settings");
     if (raw) {
       const a = JSON.parse(raw);
-      adultSettings = [
-        a.rating && `作品分级：${a.rating}`,
-        a.preferences && `描写偏好：${a.preferences}`,
-        a.boundaries && `边界设定：${a.boundaries}`,
-      ]
-        .filter(Boolean)
-        .join("\n");
+      if (a.enabled) {
+        adultSettings = [
+          a.rating && `分级：${a.rating}`,
+          a.writingStyle && `描写风格：${a.writingStyle}`,
+          a.relationBoundary && `关系边界：${a.relationBoundary}`,
+          a.preferences && `偏好：${a.preferences}`,
+          a.taboos && `禁忌：${a.taboos}`,
+          a.reference && `描写参考 / 风格示范：${a.reference}`,
+          a.xpMaterial && `XP 素材参考：${a.xpMaterial}`,
+        ]
+          .filter(Boolean)
+          .join("\n");
+      }
     }
   } catch {}
 
@@ -189,7 +195,7 @@ function buildAdvisorPrompt(
 
   if (soul) prompt += `\n\n## 书籍灵魂\n${soul}`;
   if (dna) prompt += `\n\n## 作者写作风格\n${dna}`;
-  if (adultSettings) prompt += `\n\n## 作品设定\n${adultSettings}`;
+  if (adultSettings) prompt += `\n\n## 成人创作设置\n${adultSettings}`;
 
   if (chars) {
     // Re-read full character data for the complete prompt

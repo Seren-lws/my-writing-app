@@ -10,6 +10,8 @@ type AdultSettings = {
   relationBoundary: string;
   preferences: string;
   taboos: string;
+  reference: string;
+  xpMaterial: string;
 };
 
 const DEFAULTS: AdultSettings = {
@@ -19,6 +21,8 @@ const DEFAULTS: AdultSettings = {
   relationBoundary: "所有角色均为成年人；只描写成年人之间自愿的亲密关系；不涉及未成年人、剥削、胁迫或现实人物。",
   preferences: "",
   taboos: "",
+  reference: "",
+  xpMaterial: "",
 };
 
 export default function AdultSettingsPage() {
@@ -104,6 +108,18 @@ export default function AdultSettingsPage() {
             <label className={`${labelClass} mb-3 block`}>禁忌清单</label>
             <textarea rows={3} value={settings.taboos} onChange={e => set("taboos", e.target.value)}
               placeholder="写下你不想出现的内容、词汇、关系类型或语气。" className={textareaClass} />
+          </div>
+
+          <div className={cardClass}>
+            <label className={`${labelClass} mb-3 block`}>描写参考 / 风格示范</label>
+            <textarea rows={5} value={settings.reference} onChange={e => set("reference", e.target.value)}
+              placeholder="放你喜欢的成人描写片段、具体写法、尺度示范，AI 会照着这个感觉来写。" className={textareaClass} />
+          </div>
+
+          <div className={cardClass}>
+            <label className={`${labelClass} mb-3 block`}>XP 素材参考</label>
+            <textarea rows={5} value={settings.xpMaterial} onChange={e => set("xpMaterial", e.target.value)}
+              placeholder="你的 XP / 性癖相关的素材、设定、想用上的点……" className={textareaClass} />
           </div>
         </div>
 

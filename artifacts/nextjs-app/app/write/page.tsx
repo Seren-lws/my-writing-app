@@ -264,14 +264,48 @@ export default function WritePage() {
     try { const r = localStorage.getItem("book-souls"); if (r) { const souls = JSON.parse(r); const s = Array.isArray(souls) ? souls.find((x: Record<string, string>) => x.bookId === activeBookId) : null; if (s) { soul = [s.worldview && `世界观：${s.worldview}`, s.styleGuide && `文风参考与指导：${s.styleGuide}`, s.materials && `写作素材参考：${s.materials}`, s.highlights && `主要梗点和看点：${s.highlights}`, s.forbidden && `禁区：${s.forbidden}`, s.notes && `其他补充：${s.notes}`].filter(Boolean).join("\n"); relations = s.relationsOverview || ""; } } } catch {}
     try { const r = localStorage.getItem("book-characters"); if (r) { const all = JSON.parse(r); characters = all.filter((c: Record<string, string>) => c.bookId === activeBookId); } } catch {}
 
+    let adult = "";
+    try {
+      const r = localStorage.getItem("adult-content-settings");
+      if (r) {
+        const a = JSON.parse(r);
+        if (a.enabled) {
+          adult = [
+            a.rating && `分级：${a.rating}`,
+            a.writingStyle && `描写风格：${a.writingStyle}`,
+            a.relationBoundary && `关系边界：${a.relationBoundary}`,
+            a.preferences && `偏好：${a.preferences}`,
+            a.taboos && `禁忌：${a.taboos}`,
+            a.reference && `描写参考 / 风格示范：${a.reference}`,
+            a.xpMaterial && `XP 素材参考：${a.xpMaterial}`,
+          ].filter(Boolean).join("\n");
+        }
+      }
+    } catch {}
+
     const charBlock = characters.length > 0 ? characters.map((c) => `${c.role ? `[${c.role}] ` : ""}${c.name}${c.identity ? `（${c.identity}）` : ""}${c.appearance ? `：${c.appearance}` : ""}${c.personality ? `；${c.personality}` : ""}`).join("\n") : "";
     let systemPrompt = "你是一位专业的中文小说写作助手，根据作者的风格设定和章节要求续写或扩写正文。直接输出正文内容，不要加标题或解释。";
     if (dna) systemPrompt += `\n\n【写作风格】\n${dna}`;
     if (soul) systemPrompt += `\n\n【书籍设定】\n${soul}`;
     if (relations) systemPrompt += `\n\n【角色关系概况】\n${relations}`;
     if (charBlock) systemPrompt += `\n\n【主要角色】\n${charBlock}`;
+    if (adult) systemPrompt += `\n\n【成人创作设置】\n${adult}`;
+
+    // 前情：当前章之前最近 5 章大纲 + 上一章正文结尾
+    const idx = bookChapters.findIndex((c) => c.id === activeChapterId);
+    const outlineLines: string[] = [];
+    if (idx > 0) {
+      for (let k = Math.max(0, idx - 5); k < idx; k++) {
+        const c = bookChapters[k];
+        if (c.outline) outlineLines.push(`第${k + 1}章《${c.title || "未命名"}》：${c.outline}`);
+      }
+    }
+    const prevChapter = idx > 0 ? bookChapters[idx - 1] : undefined;
+    const prevTail = prevChapter?.content ? prevChapter.content.slice(-1500) : "";
 
     const userParts: string[] = [];
+    if (outlineLines.length) userParts.push(`【前几章大纲】\n${outlineLines.join("\n")}`);
+    if (prevTail) userParts.push(`【上一章结尾】\n…${prevTail}`);
     if (activeChapter?.outline) userParts.push(`本章大纲：${activeChapter.outline}`);
     if (activeChapter?.content) userParts.push(`已有正文（请在此基础上续写）：\n${activeChapter.content}`);
     if (activeChapter?.aiInstruction) userParts.push(`特别要求：${activeChapter.aiInstruction}`);
