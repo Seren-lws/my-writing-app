@@ -358,6 +358,12 @@ export default function WritePage() {
               <Link href={`/book-soul?bookId=${activeBookId}`} className="mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#7c5038]">
                 <span>🪬</span><span>书籍灵魂卡</span>
               </Link>
+              <Link href={`/outlines?bookId=${activeBookId}`} className="mt-1 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#7c5038]">
+                <span>📋</span><span>章节大纲</span>
+              </Link>
+              <Link href={`/publish?bookId=${activeBookId}`} className="mt-1 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#7c5038]">
+                <span>📢</span><span>发布内容</span>
+              </Link>
             </div>
           )}
           {mobileTab === "tools" && (
